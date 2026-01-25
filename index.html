@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Music Visualizer</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Visualization Canvas (Bottom Layer) -->
+    <canvas id="visualizer-canvas"></canvas>
+
+    <!-- Control Panel (Top Layer) -->
+    <div class="control-panel">
+        <!-- Glass Container -->
+        <div class="glass-container">
+            <!-- Left Section: Upload, Play, Stop -->
+            <div class="controls-left">
+                <label class="upload-btn" title="Upload MP3">
+                    <input type="file" id="audio-upload" accept="audio/mp3,audio/mpeg" hidden>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="4" y="4" width="16" height="16" rx="2"/>
+                    </svg>
+                </label>
+                <button id="play-btn" class="control-btn" title="Play" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="6,4 20,12 6,20"/>
+                    </svg>
+                </button>
+                <button id="stop-btn" class="control-btn" title="Stop" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Center Section: Progress Bar & Time -->
+            <div class="controls-center">
+                <div class="progress-container">
+                    <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" disabled>
+                </div>
+                <div class="time-display">
+                    <span id="current-time">00:00</span>
+                    <span class="time-separator">|</span>
+                    <span id="total-time">00:00</span>
+                </div>
+            </div>
+
+            <!-- Right Section: Volume & Mute -->
+            <div class="controls-right">
+                <input type="range" id="volume-slider" min="0" max="100" value="100" step="1">
+                <button id="mute-btn" class="control-btn" title="Mute">
+                    <svg viewBox="0 0 24 24" fill="currentColor" id="volume-icon">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor" id="mute-icon" class="hidden">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Color Picker Row -->
+        <div class="color-picker-row">
+            <div class="color-picker-item">
+                <input type="color" id="color-background" value="#1a1a2e">
+                <label>Background</label>
+            </div>
+            <div class="color-picker-item">
+                <input type="color" id="color-bass" value="#e94560">
+                <label>Bass</label>
+            </div>
+            <div class="color-picker-item">
+                <input type="color" id="color-lower-mid" value="#ff6b6b">
+                <label>Lower-Mid</label>
+            </div>
+            <div class="color-picker-item">
+                <input type="color" id="color-mid" value="#feca57">
+                <label>Mid</label>
+            </div>
+            <div class="color-picker-item">
+                <input type="color" id="color-upper-mid" value="#48dbfb">
+                <label>Upper-Mid</label>
+            </div>
+            <div class="color-picker-item">
+                <input type="color" id="color-treble" value="#ff9ff3">
+                <label>Treble</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="audio-analyzer.js"></script>
+    <script src="visualizer.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
