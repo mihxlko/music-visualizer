@@ -111,6 +111,7 @@ body {
     background: #FFFFFF;
     border-radius: 2px;
     box-shadow: 8px 0 0 #FFFFFF;
+    margin-left: -4px;
 }
 
 /* Progress Bar */
