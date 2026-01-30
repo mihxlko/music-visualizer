@@ -214,16 +214,25 @@ body {
     display: none;
 }
 
-/* Color Picker Row */
-.color-picker-row {
+/* Bottom Panel - Atmospheric Motion Fields Controls */
+.bottom-panel {
     display: flex;
-    gap: 16px;
-    padding: 12px 20px;
+    align-items: flex-start;
+    gap: 0;
+    padding: 16px 24px;
     background: rgba(255, 255, 255, 0.08);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Background Color Section */
+.background-color-section {
+    display: flex;
+    align-items: center;
+    padding-right: 20px;
 }
 
 .color-picker-item {
@@ -267,7 +276,165 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* Section Divider */
+.section-divider {
+    width: 1px;
+    align-self: stretch;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 20px;
+}
+
+/* Control Sections */
+.control-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 200px;
+}
+
+.section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 0 4px 0;
+}
+
+/* Subsections */
+.subsection {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.subsection-title {
+    font-size: 10px;
+    font-weight: 500;
+    color: #FFFFFF;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0;
+}
+
+/* Control Row */
+.control-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.control-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #FFFFFF;
+    opacity: 0.9;
+    min-width: 90px;
+    white-space: nowrap;
+}
+
+/* Slider Container */
+.slider-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    flex: 1;
+    min-width: 100px;
+}
+
+.control-slider {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+    cursor: pointer;
+    outline: none;
+}
+
+.control-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    background: #FFFFFF;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.1s ease;
+}
+
+.control-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+}
+
+.control-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    background: #FFFFFF;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.slider-value {
+    font-size: 10px;
+    font-weight: 500;
+    color: #FFFFFF;
+    opacity: 0.7;
+}
+
+/* Color Swatch */
+.color-swatch {
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    padding: 0;
+    background: none;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.color-swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+}
+
+.color-swatch::-webkit-color-swatch {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+}
+
+.color-swatch::-moz-color-swatch {
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+}
+
 /* Responsive adjustments */
+@media (max-width: 1200px) {
+    .bottom-panel {
+        flex-wrap: wrap;
+        justify-content: center;
+        max-width: 90vw;
+    }
+
+    .section-divider {
+        display: none;
+    }
+
+    .control-section {
+        padding: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .control-section:last-child {
+        border-bottom: none;
+    }
+}
+
 @media (max-width: 768px) {
     .glass-container {
         flex-direction: column;
@@ -279,8 +446,28 @@ body {
         min-width: 250px;
     }
 
-    .color-picker-row {
+    .bottom-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 16px;
+    }
+
+    .background-color-section {
+        padding-right: 0;
+        padding-bottom: 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .control-section {
+        min-width: auto;
+    }
+
+    .control-row {
         flex-wrap: wrap;
-        justify-content: center;
+    }
+
+    .control-label {
+        min-width: 80px;
     }
 }

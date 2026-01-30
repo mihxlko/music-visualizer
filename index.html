@@ -63,31 +63,154 @@
             </div>
         </div>
 
-        <!-- Color Picker Row -->
-        <div class="color-picker-row">
-            <div class="color-picker-item">
-                <input type="color" id="color-background" value="#1a1a2e">
-                <label>Background</label>
+        <!-- Bottom Panel - Atmospheric Motion Fields Controls -->
+        <div class="bottom-panel">
+            <!-- Background Color -->
+            <div class="background-color-section">
+                <div class="color-picker-item">
+                    <input type="color" id="color-background" value="#1a1a2e">
+                    <label>Background</label>
+                </div>
             </div>
-            <div class="color-picker-item">
-                <input type="color" id="color-bass" value="#e94560">
-                <label>Bass</label>
+
+            <!-- Section Divider -->
+            <div class="section-divider"></div>
+
+            <!-- Motion Section -->
+            <div class="control-section">
+                <h3 class="section-title">Motion</h3>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Response</h4>
+                    <div class="control-row">
+                        <label class="control-label">Attack</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-attack" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-attack">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-attack" value="#48dbfb">
+                    </div>
+                    <div class="control-row">
+                        <label class="control-label">Decay</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-decay" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-decay">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-decay" value="#feca57">
+                    </div>
+                    <div class="control-row">
+                        <label class="control-label">Inertia</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-inertia" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-inertia">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-inertia" value="#ff6b6b">
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Drift</h4>
+                    <div class="control-row">
+                        <label class="control-label">Drift Amount</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-drift" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-drift">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-drift" value="#ff9ff3">
+                    </div>
+                </div>
             </div>
-            <div class="color-picker-item">
-                <input type="color" id="color-lower-mid" value="#ff6b6b">
-                <label>Lower-Mid</label>
+
+            <!-- Section Divider -->
+            <div class="section-divider"></div>
+
+            <!-- Form Section -->
+            <div class="control-section">
+                <h3 class="section-title">Form</h3>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Scale</h4>
+                    <div class="control-row">
+                        <label class="control-label">Field Scale</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-field-scale" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-field-scale">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-field-scale" value="#e94560">
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Blend</h4>
+                    <div class="control-row">
+                        <label class="control-label">Overlap</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-overlap" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-overlap">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-overlap" value="#feca57">
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Anchor</h4>
+                    <div class="control-row">
+                        <label class="control-label">Anchor Stability</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-anchor" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-anchor">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-anchor" value="#ff6b6b">
+                    </div>
+                </div>
             </div>
-            <div class="color-picker-item">
-                <input type="color" id="color-mid" value="#feca57">
-                <label>Mid</label>
-            </div>
-            <div class="color-picker-item">
-                <input type="color" id="color-upper-mid" value="#48dbfb">
-                <label>Upper-Mid</label>
-            </div>
-            <div class="color-picker-item">
-                <input type="color" id="color-treble" value="#ff9ff3">
-                <label>Treble</label>
+
+            <!-- Section Divider -->
+            <div class="section-divider"></div>
+
+            <!-- Energy Section -->
+            <div class="control-section">
+                <h3 class="section-title">Energy</h3>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Emphasis</h4>
+                    <div class="control-row">
+                        <label class="control-label">Low Emphasis</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-low-emphasis" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-low-emphasis">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-low-emphasis" value="#e94560">
+                    </div>
+                    <div class="control-row">
+                        <label class="control-label">Mid Emphasis</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-mid-emphasis" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-mid-emphasis">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-mid-emphasis" value="#feca57">
+                    </div>
+                    <div class="control-row">
+                        <label class="control-label">High Emphasis</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-high-emphasis" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-high-emphasis">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-high-emphasis" value="#ff9ff3">
+                    </div>
+                </div>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Dynamics</h4>
+                    <div class="control-row">
+                        <label class="control-label">Compression</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-compression" min="0" max="100" value="50">
+                            <span class="slider-value" id="value-compression">50</span>
+                        </div>
+                        <input type="color" class="color-swatch" id="color-compression" value="#48dbfb">
+                    </div>
+                </div>
             </div>
         </div>
     </div>

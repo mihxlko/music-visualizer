@@ -33,13 +33,56 @@ class MusicVisualizerApp {
             volumeIcon: document.getElementById('volume-icon'),
             muteIcon: document.getElementById('mute-icon'),
             colorPickers: {
-                background: document.getElementById('color-background'),
-                bass: document.getElementById('color-bass'),
-                lowerMid: document.getElementById('color-lower-mid'),
-                mid: document.getElementById('color-mid'),
-                upperMid: document.getElementById('color-upper-mid'),
-                treble: document.getElementById('color-treble')
+                background: document.getElementById('color-background')
             }
+        };
+
+        // Atmospheric Motion Fields controls
+        this.controls = {
+            // Motion controls
+            attack: { slider: document.getElementById('slider-attack'), value: document.getElementById('value-attack'), color: document.getElementById('color-attack') },
+            decay: { slider: document.getElementById('slider-decay'), value: document.getElementById('value-decay'), color: document.getElementById('color-decay') },
+            inertia: { slider: document.getElementById('slider-inertia'), value: document.getElementById('value-inertia'), color: document.getElementById('color-inertia') },
+            drift: { slider: document.getElementById('slider-drift'), value: document.getElementById('value-drift'), color: document.getElementById('color-drift') },
+            // Form controls
+            fieldScale: { slider: document.getElementById('slider-field-scale'), value: document.getElementById('value-field-scale'), color: document.getElementById('color-field-scale') },
+            overlap: { slider: document.getElementById('slider-overlap'), value: document.getElementById('value-overlap'), color: document.getElementById('color-overlap') },
+            anchor: { slider: document.getElementById('slider-anchor'), value: document.getElementById('value-anchor'), color: document.getElementById('color-anchor') },
+            // Energy controls
+            lowEmphasis: { slider: document.getElementById('slider-low-emphasis'), value: document.getElementById('value-low-emphasis'), color: document.getElementById('color-low-emphasis') },
+            midEmphasis: { slider: document.getElementById('slider-mid-emphasis'), value: document.getElementById('value-mid-emphasis'), color: document.getElementById('color-mid-emphasis') },
+            highEmphasis: { slider: document.getElementById('slider-high-emphasis'), value: document.getElementById('value-high-emphasis'), color: document.getElementById('color-high-emphasis') },
+            compression: { slider: document.getElementById('slider-compression'), value: document.getElementById('value-compression'), color: document.getElementById('color-compression') }
+        };
+
+        // Store control values
+        this.controlValues = {
+            attack: 50,
+            decay: 50,
+            inertia: 50,
+            drift: 50,
+            fieldScale: 50,
+            overlap: 50,
+            anchor: 50,
+            lowEmphasis: 50,
+            midEmphasis: 50,
+            highEmphasis: 50,
+            compression: 50
+        };
+
+        // Store control colors
+        this.controlColors = {
+            attack: '#48dbfb',
+            decay: '#feca57',
+            inertia: '#ff6b6b',
+            drift: '#ff9ff3',
+            fieldScale: '#e94560',
+            overlap: '#feca57',
+            anchor: '#ff6b6b',
+            lowEmphasis: '#e94560',
+            midEmphasis: '#feca57',
+            highEmphasis: '#ff9ff3',
+            compression: '#48dbfb'
         };
 
         // Initialize
@@ -62,6 +105,10 @@ class MusicVisualizerApp {
 
         // Load saved state from localStorage
         this.loadState();
+
+        // Initialize visualizer with control parameters and colors
+        this.updateVisualizerParams();
+        this.updateVisualizerColors();
 
         // Start visualizer with static render
         this.visualizer.renderStatic();
@@ -94,10 +141,49 @@ class MusicVisualizerApp {
         this.audio.addEventListener('play', () => this.onPlay());
         this.audio.addEventListener('pause', () => this.onPause());
 
-        // Color pickers
-        for (const [range, picker] of Object.entries(this.elements.colorPickers)) {
-            picker.addEventListener('input', (e) => this.setColor(range, e.target.value));
+        // Background color picker
+        this.elements.colorPickers.background.addEventListener('input', (e) => this.setColor('background', e.target.value));
+
+        // Atmospheric Motion Fields control event listeners
+        for (const [name, control] of Object.entries(this.controls)) {
+            // Slider input events
+            control.slider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                this.controlValues[name] = value;
+                control.value.textContent = value;
+                // Update visualizer in real-time
+                this.updateVisualizerParams();
+            });
+
+            // Save state on slider change end
+            control.slider.addEventListener('change', () => {
+                this.saveState();
+            });
+
+            // Color swatch events
+            control.color.addEventListener('input', (e) => {
+                this.controlColors[name] = e.target.value;
+                // Update visualizer colors in real-time
+                this.updateVisualizerColors();
+                this.saveState();
+            });
         }
+    }
+
+    /**
+     * Update visualizer with current control parameter values
+     */
+    updateVisualizerParams() {
+        if (!this.visualizer) return;
+        this.visualizer.setControlParams(this.controlValues);
+    }
+
+    /**
+     * Update visualizer with current control colors
+     */
+    updateVisualizerColors() {
+        if (!this.visualizer) return;
+        this.visualizer.setControlColors(this.controlColors);
     }
 
     /**
@@ -168,23 +254,36 @@ class MusicVisualizerApp {
         // Generate a random base hue
         const baseHue = Math.random() * 360;
 
-        // Generate harmonious colors using analogous/complementary scheme
-        const colors = {
-            background: this.hslToHex((baseHue + 180) % 360, 30, 15),
-            bass: this.hslToHex(baseHue, 80, 50),
-            lowerMid: this.hslToHex((baseHue + 30) % 360, 75, 55),
-            mid: this.hslToHex((baseHue + 60) % 360, 85, 60),
-            upperMid: this.hslToHex((baseHue + 180) % 360, 70, 60),
-            treble: this.hslToHex((baseHue + 270) % 360, 75, 65)
+        // Generate background color
+        const backgroundColor = this.hslToHex((baseHue + 180) % 360, 30, 15);
+        this.elements.colorPickers.background.value = backgroundColor;
+        this.visualizer.setColor('background', backgroundColor);
+
+        // Generate harmonious colors for controls
+        const controlColorMap = {
+            attack: this.hslToHex((baseHue + 180) % 360, 70, 60),      // Upper-Mid equivalent
+            decay: this.hslToHex((baseHue + 60) % 360, 85, 60),        // Mid equivalent
+            inertia: this.hslToHex((baseHue + 30) % 360, 75, 55),      // Lower-Mid equivalent
+            drift: this.hslToHex((baseHue + 270) % 360, 75, 65),       // Treble equivalent
+            fieldScale: this.hslToHex(baseHue, 80, 50),                // Bass equivalent
+            overlap: this.hslToHex((baseHue + 60) % 360, 85, 60),      // Mid equivalent
+            anchor: this.hslToHex((baseHue + 30) % 360, 75, 55),       // Lower-Mid equivalent
+            lowEmphasis: this.hslToHex(baseHue, 80, 50),               // Bass equivalent
+            midEmphasis: this.hslToHex((baseHue + 60) % 360, 85, 60),  // Mid equivalent
+            highEmphasis: this.hslToHex((baseHue + 270) % 360, 75, 65),// Treble equivalent
+            compression: this.hslToHex((baseHue + 180) % 360, 70, 60)  // Upper-Mid equivalent
         };
 
-        // Apply colors to pickers and visualizer
-        for (const [range, color] of Object.entries(colors)) {
-            this.elements.colorPickers[range].value = color;
-            this.visualizer.setColor(range, color);
+        // Apply colors to control swatches
+        for (const [name, color] of Object.entries(controlColorMap)) {
+            this.controlColors[name] = color;
+            this.controls[name].color.value = color;
         }
 
-        console.log('Generated harmonious colors:', colors);
+        // Sync visualizer with new colors
+        this.updateVisualizerColors();
+
+        console.log('Generated harmonious colors');
     }
 
     /**
@@ -304,21 +403,36 @@ class MusicVisualizerApp {
      * @param {Object} data
      */
     loadColors(data) {
-        const colorMap = {
-            baseBackground: 'background',
-            bass: 'bass',
-            lowerMid: 'lowerMid',
-            mid: 'mid',
-            upperMid: 'upperMid',
-            treble: 'treble'
-        };
+        // Load background color
+        if (data.baseBackground) {
+            this.elements.colorPickers.background.value = data.baseBackground;
+            this.visualizer.setColor('background', data.baseBackground);
+        }
 
-        for (const [savedKey, pickerKey] of Object.entries(colorMap)) {
-            if (data[savedKey]) {
-                this.elements.colorPickers[pickerKey].value = data[savedKey];
-                this.visualizer.setColor(pickerKey, data[savedKey]);
+        // Load control values if saved
+        if (data.controlValues) {
+            for (const [name, value] of Object.entries(data.controlValues)) {
+                if (this.controls[name]) {
+                    this.controlValues[name] = value;
+                    this.controls[name].slider.value = value;
+                    this.controls[name].value.textContent = value;
+                }
             }
         }
+
+        // Load control colors if saved
+        if (data.controlColors) {
+            for (const [name, color] of Object.entries(data.controlColors)) {
+                if (this.controls[name]) {
+                    this.controlColors[name] = color;
+                    this.controls[name].color.value = color;
+                }
+            }
+        }
+
+        // Sync visualizer with loaded values
+        this.updateVisualizerParams();
+        this.updateVisualizerColors();
     }
 
     /**
@@ -416,11 +530,8 @@ class MusicVisualizerApp {
 
             const songData = {
                 baseBackground: this.elements.colorPickers.background.value,
-                bass: this.elements.colorPickers.bass.value,
-                lowerMid: this.elements.colorPickers.lowerMid.value,
-                mid: this.elements.colorPickers.mid.value,
-                upperMid: this.elements.colorPickers.upperMid.value,
-                treble: this.elements.colorPickers.treble.value,
+                controlValues: { ...this.controlValues },
+                controlColors: { ...this.controlColors },
                 circlePositions: this.visualizer.getCirclePositions()
             };
 
@@ -443,10 +554,8 @@ class MusicVisualizerApp {
         try {
             const data = JSON.parse(localStorage.getItem('musicVisualizerData') || '{}');
 
-            // Apply default colors to visualizer
-            for (const [range, picker] of Object.entries(this.elements.colorPickers)) {
-                this.visualizer.setColor(range, picker.value);
-            }
+            // Apply background color to visualizer
+            this.visualizer.setColor('background', this.elements.colorPickers.background.value);
 
             console.log('State loaded from localStorage');
         } catch (e) {
