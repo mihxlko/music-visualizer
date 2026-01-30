@@ -110,7 +110,7 @@ class MusicVisualizerApp {
 
         // Check file type
         if (!file.type.match('audio.*')) {
-            alert('Please upload an audio file (MP3)');
+            alert('Please upload an audio file (MP3 or M4A)');
             return;
         }
 
