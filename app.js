@@ -39,50 +39,43 @@ class MusicVisualizerApp {
 
         // Atmospheric Motion Fields controls
         this.controls = {
-            // Motion controls
-            attack: { slider: document.getElementById('slider-attack'), value: document.getElementById('value-attack'), color: document.getElementById('color-attack') },
-            decay: { slider: document.getElementById('slider-decay'), value: document.getElementById('value-decay'), color: document.getElementById('color-decay') },
-            inertia: { slider: document.getElementById('slider-inertia'), value: document.getElementById('value-inertia'), color: document.getElementById('color-inertia') },
-            drift: { slider: document.getElementById('slider-drift'), value: document.getElementById('value-drift'), color: document.getElementById('color-drift') },
-            // Form controls
-            fieldScale: { slider: document.getElementById('slider-field-scale'), value: document.getElementById('value-field-scale'), color: document.getElementById('color-field-scale') },
-            overlap: { slider: document.getElementById('slider-overlap'), value: document.getElementById('value-overlap'), color: document.getElementById('color-overlap') },
-            anchor: { slider: document.getElementById('slider-anchor'), value: document.getElementById('value-anchor'), color: document.getElementById('color-anchor') },
-            // Energy controls
+            // Motion controls (no color pickers - behavior only)
+            attack: { slider: document.getElementById('slider-attack'), value: document.getElementById('value-attack') },
+            decay: { slider: document.getElementById('slider-decay'), value: document.getElementById('value-decay') },
+            inertia: { slider: document.getElementById('slider-inertia'), value: document.getElementById('value-inertia') },
+            drift: { slider: document.getElementById('slider-drift'), value: document.getElementById('value-drift') },
+            // Form controls (no color pickers - behavior only)
+            fieldScale: { slider: document.getElementById('slider-field-scale'), value: document.getElementById('value-field-scale') },
+            overlap: { slider: document.getElementById('slider-overlap'), value: document.getElementById('value-overlap') },
+            anchor: { slider: document.getElementById('slider-anchor'), value: document.getElementById('value-anchor') },
+            // Energy controls (with color pickers - these tint the circles)
             lowEmphasis: { slider: document.getElementById('slider-low-emphasis'), value: document.getElementById('value-low-emphasis'), color: document.getElementById('color-low-emphasis') },
             midEmphasis: { slider: document.getElementById('slider-mid-emphasis'), value: document.getElementById('value-mid-emphasis'), color: document.getElementById('color-mid-emphasis') },
             highEmphasis: { slider: document.getElementById('slider-high-emphasis'), value: document.getElementById('value-high-emphasis'), color: document.getElementById('color-high-emphasis') },
-            compression: { slider: document.getElementById('slider-compression'), value: document.getElementById('value-compression'), color: document.getElementById('color-compression') }
+            // Dynamics (no color picker - behavior only)
+            compression: { slider: document.getElementById('slider-compression'), value: document.getElementById('value-compression') }
         };
 
         // Store control values
         this.controlValues = {
-            attack: 50,
-            decay: 50,
-            inertia: 50,
+            attack: 0,
+            decay: 0,
+            inertia: 0,
             drift: 50,
-            fieldScale: 50,
+            fieldScale: 25,
             overlap: 50,
             anchor: 50,
             lowEmphasis: 50,
             midEmphasis: 50,
             highEmphasis: 50,
-            compression: 50
+            compression: 0
         };
 
-        // Store control colors
+        // Store control colors (only for emphasis controls that tint circles)
         this.controlColors = {
-            attack: '#48dbfb',
-            decay: '#feca57',
-            inertia: '#ff6b6b',
-            drift: '#ff9ff3',
-            fieldScale: '#e94560',
-            overlap: '#feca57',
-            anchor: '#ff6b6b',
             lowEmphasis: '#e94560',
             midEmphasis: '#feca57',
-            highEmphasis: '#ff9ff3',
-            compression: '#48dbfb'
+            highEmphasis: '#ff9ff3'
         };
 
         // Initialize
@@ -146,11 +139,19 @@ class MusicVisualizerApp {
 
         // Atmospheric Motion Fields control event listeners
         for (const [name, control] of Object.entries(this.controls)) {
+            // Skip if slider element not found
+            if (!control.slider) {
+                console.warn(`Slider element not found for control: ${name}`);
+                continue;
+            }
+
             // Slider input events
             control.slider.addEventListener('input', (e) => {
                 const value = parseInt(e.target.value);
                 this.controlValues[name] = value;
-                control.value.textContent = value;
+                if (control.value) {
+                    control.value.textContent = value;
+                }
                 // Update visualizer in real-time
                 this.updateVisualizerParams();
             });
@@ -160,13 +161,15 @@ class MusicVisualizerApp {
                 this.saveState();
             });
 
-            // Color swatch events
-            control.color.addEventListener('input', (e) => {
-                this.controlColors[name] = e.target.value;
-                // Update visualizer colors in real-time
-                this.updateVisualizerColors();
-                this.saveState();
-            });
+            // Color swatch events (only for controls that have color pickers)
+            if (control.color) {
+                control.color.addEventListener('input', (e) => {
+                    this.controlColors[name] = e.target.value;
+                    // Update visualizer colors in real-time
+                    this.updateVisualizerColors();
+                    this.saveState();
+                });
+            }
         }
     }
 
@@ -259,25 +262,19 @@ class MusicVisualizerApp {
         this.elements.colorPickers.background.value = backgroundColor;
         this.visualizer.setColor('background', backgroundColor);
 
-        // Generate harmonious colors for controls
+        // Generate harmonious colors for frequency emphasis controls (these tint the circles)
         const controlColorMap = {
-            attack: this.hslToHex((baseHue + 180) % 360, 70, 60),      // Upper-Mid equivalent
-            decay: this.hslToHex((baseHue + 60) % 360, 85, 60),        // Mid equivalent
-            inertia: this.hslToHex((baseHue + 30) % 360, 75, 55),      // Lower-Mid equivalent
-            drift: this.hslToHex((baseHue + 270) % 360, 75, 65),       // Treble equivalent
-            fieldScale: this.hslToHex(baseHue, 80, 50),                // Bass equivalent
-            overlap: this.hslToHex((baseHue + 60) % 360, 85, 60),      // Mid equivalent
-            anchor: this.hslToHex((baseHue + 30) % 360, 75, 55),       // Lower-Mid equivalent
-            lowEmphasis: this.hslToHex(baseHue, 80, 50),               // Bass equivalent
-            midEmphasis: this.hslToHex((baseHue + 60) % 360, 85, 60),  // Mid equivalent
-            highEmphasis: this.hslToHex((baseHue + 270) % 360, 75, 65),// Treble equivalent
-            compression: this.hslToHex((baseHue + 180) % 360, 70, 60)  // Upper-Mid equivalent
+            lowEmphasis: this.hslToHex(baseHue, 80, 50),               // Bass/lower-mid tint
+            midEmphasis: this.hslToHex((baseHue + 60) % 360, 85, 60),  // Mid tint
+            highEmphasis: this.hslToHex((baseHue + 270) % 360, 75, 65) // Upper-mid/treble tint
         };
 
         // Apply colors to control swatches
         for (const [name, color] of Object.entries(controlColorMap)) {
             this.controlColors[name] = color;
-            this.controls[name].color.value = color;
+            if (this.controls[name] && this.controls[name].color) {
+                this.controls[name].color.value = color;
+            }
         }
 
         // Sync visualizer with new colors
@@ -412,18 +409,20 @@ class MusicVisualizerApp {
         // Load control values if saved
         if (data.controlValues) {
             for (const [name, value] of Object.entries(data.controlValues)) {
-                if (this.controls[name]) {
+                if (this.controls[name] && this.controls[name].slider) {
                     this.controlValues[name] = value;
                     this.controls[name].slider.value = value;
-                    this.controls[name].value.textContent = value;
+                    if (this.controls[name].value) {
+                        this.controls[name].value.textContent = value;
+                    }
                 }
             }
         }
 
-        // Load control colors if saved
+        // Load control colors if saved (only for emphasis controls that have color pickers)
         if (data.controlColors) {
             for (const [name, color] of Object.entries(data.controlColors)) {
-                if (this.controls[name]) {
+                if (this.controls[name] && this.controls[name].color) {
                     this.controlColors[name] = color;
                     this.controls[name].color.value = color;
                 }

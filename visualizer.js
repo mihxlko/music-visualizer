@@ -10,40 +10,33 @@ class Visualizer {
         this.isRunning = false;
         this.animationId = null;
 
-        // Circle positions for each frequency range (anchor positions)
+        // Circle positions for each emphasis band (anchor positions)
+        // Each band has a left circle; right circle mirrors horizontally
         this.circlePositions = {
-            bass: { x: 0, y: 0 },
-            lowerMid: { x: 0, y: 0 },
-            mid: { x: 0, y: 0 },
-            upperMid: { x: 0, y: 0 },
-            treble: { x: 0, y: 0 }
+            lowLeft: { x: 0, y: 0 },
+            midLeft: { x: 0, y: 0 },
+            highLeft: { x: 0, y: 0 }
         };
 
         // Current drifted positions (actual render positions)
         this.driftPositions = {
-            bass: { x: 0, y: 0 },
-            lowerMid: { x: 0, y: 0 },
-            mid: { x: 0, y: 0 },
-            upperMid: { x: 0, y: 0 },
-            treble: { x: 0, y: 0 }
+            lowLeft: { x: 0, y: 0 },
+            midLeft: { x: 0, y: 0 },
+            highLeft: { x: 0, y: 0 }
         };
 
         // Drift velocities for organic movement
         this.driftVelocities = {
-            bass: { x: 0, y: 0 },
-            lowerMid: { x: 0, y: 0 },
-            mid: { x: 0, y: 0 },
-            upperMid: { x: 0, y: 0 },
-            treble: { x: 0, y: 0 }
+            lowLeft: { x: 0, y: 0 },
+            midLeft: { x: 0, y: 0 },
+            highLeft: { x: 0, y: 0 }
         };
 
-        // Smoothed amplitudes for attack/decay/inertia
+        // Smoothed amplitudes for each emphasis band
         this.smoothedAmplitudes = {
-            bass: 0,
-            lowerMid: 0,
+            low: 0,
             mid: 0,
-            upperMid: 0,
-            treble: 0
+            high: 0
         };
 
         // Colors for each element
@@ -59,41 +52,33 @@ class Visualizer {
         // Atmospheric Motion Fields control parameters (0-100)
         this.controlParams = {
             // Motion
-            attack: 50,
-            decay: 50,
-            inertia: 50,
+            attack: 0,
+            decay: 0,
+            inertia: 0,
             drift: 50,
             // Form
-            fieldScale: 50,
+            fieldScale: 25,
             overlap: 50,
             anchor: 50,
             // Energy
             lowEmphasis: 50,
             midEmphasis: 50,
             highEmphasis: 50,
-            compression: 50
+            compression: 0
         };
 
-        // Control colors (used for rendering)
+        // Control colors (used for rendering frequency emphasis tints)
         this.controlColors = {
-            attack: '#48dbfb',
-            decay: '#feca57',
-            inertia: '#ff6b6b',
-            drift: '#ff9ff3',
-            fieldScale: '#e94560',
-            overlap: '#feca57',
-            anchor: '#ff6b6b',
             lowEmphasis: '#e94560',
             midEmphasis: '#feca57',
-            highEmphasis: '#ff9ff3',
-            compression: '#48dbfb'
+            highEmphasis: '#ff9ff3'
         };
 
         // Visualization settings
-        this.minRadius = 50;        // Minimum circle radius when silent
-        this.maxRadius = 500;       // Maximum circle radius at peak
+        this.minRadius = 10;        // Minimum circle radius when silent
+        this.maxRadius = 1000;      // Maximum circle radius at peak
         this.minOpacity = 0.03;     // 3% opacity when inactive
-        this.maxOpacity = 0.7;      // Max opacity at peak
+        this.maxOpacity = 0.85;     // Max opacity at peak
 
         // Reference to audio analyzer
         this.audioAnalyzer = null;
@@ -154,18 +139,19 @@ class Visualizer {
      */
     generateRandomPositions() {
         const padding = 150;
-        const ranges = ['bass', 'lowerMid', 'mid', 'upperMid', 'treble'];
+        const bands = ['lowLeft', 'midLeft', 'highLeft'];
 
-        for (const range of ranges) {
+        // Generate positions for left circles (on left half of screen)
+        for (const band of bands) {
             const pos = {
-                x: padding + Math.random() * (this.canvas.width - padding * 2),
+                x: padding + Math.random() * (this.canvas.width / 2 - padding * 1.5),
                 y: padding + Math.random() * (this.canvas.height - padding * 2)
             };
-            this.circlePositions[range] = pos;
+            this.circlePositions[band] = pos;
             // Initialize drift positions to match anchor positions
-            this.driftPositions[range] = { x: pos.x, y: pos.y };
+            this.driftPositions[band] = { x: pos.x, y: pos.y };
             // Initialize drift velocities with random directions
-            this.driftVelocities[range] = {
+            this.driftVelocities[band] = {
                 x: (Math.random() - 0.5) * 2,
                 y: (Math.random() - 0.5) * 2
             };
@@ -179,12 +165,12 @@ class Visualizer {
      * @param {Array} positions - Array of {x, y} objects
      */
     setCirclePositions(positions) {
-        const ranges = ['bass', 'lowerMid', 'mid', 'upperMid', 'treble'];
+        const bands = ['lowLeft', 'midLeft', 'highLeft'];
         positions.forEach((pos, index) => {
-            if (ranges[index]) {
-                this.circlePositions[ranges[index]] = { x: pos.x, y: pos.y };
+            if (bands[index] && pos) {
+                this.circlePositions[bands[index]] = { x: pos.x, y: pos.y };
                 // Also update drift positions
-                this.driftPositions[ranges[index]] = { x: pos.x, y: pos.y };
+                this.driftPositions[bands[index]] = { x: pos.x, y: pos.y };
             }
         });
         this.clampPositions();
@@ -195,10 +181,10 @@ class Visualizer {
      * @returns {Array} - Array of {x, y} objects
      */
     getCirclePositions() {
-        const ranges = ['bass', 'lowerMid', 'mid', 'upperMid', 'treble'];
-        return ranges.map(range => ({
-            x: this.circlePositions[range].x,
-            y: this.circlePositions[range].y
+        const bands = ['lowLeft', 'midLeft', 'highLeft'];
+        return bands.map(band => ({
+            x: this.circlePositions[band].x,
+            y: this.circlePositions[band].y
         }));
     }
 
@@ -403,19 +389,31 @@ class Visualizer {
      * @param {number} deltaTime - Time since last frame in seconds
      */
     updateDriftPositions(deltaTime) {
-        const ranges = ['bass', 'lowerMid', 'mid', 'upperMid', 'treble'];
+        const bands = ['lowLeft', 'midLeft', 'highLeft'];
         const driftAmount = this.controlParams.drift / 100; // 0-1
         const anchorStability = this.controlParams.anchor / 100; // 0-1
+
+        // When drift is 0, snap to anchor positions immediately
+        if (driftAmount === 0) {
+            for (const band of bands) {
+                this.driftPositions[band].x = this.circlePositions[band].x;
+                this.driftPositions[band].y = this.circlePositions[band].y;
+                // Reset velocities
+                this.driftVelocities[band].x = 0;
+                this.driftVelocities[band].y = 0;
+            }
+            return;
+        }
 
         // Drift speed scales with drift amount
         const driftSpeed = driftAmount * 50; // pixels per second at max
         // Max drift distance from anchor (more drift = further from anchor)
-        const maxDriftDistance = driftAmount * 200;
+        const maxDriftDistance = driftAmount * 400;
 
-        for (const range of ranges) {
-            const anchor = this.circlePositions[range];
-            const drift = this.driftPositions[range];
-            const velocity = this.driftVelocities[range];
+        for (const band of bands) {
+            const anchor = this.circlePositions[band];
+            const drift = this.driftPositions[band];
+            const velocity = this.driftVelocities[band];
 
             // Add some randomness to velocity over time (organic movement)
             velocity.x += (Math.random() - 0.5) * 0.5 * deltaTime;
@@ -443,27 +441,32 @@ class Visualizer {
             drift.y += dy * pullStrength * deltaTime;
 
             // Hard limit on drift distance
-            if (distance > maxDriftDistance && maxDriftDistance > 0) {
+            if (distance > maxDriftDistance) {
                 const scale = maxDriftDistance / distance;
                 drift.x = anchor.x + (drift.x - anchor.x) * scale;
                 drift.y = anchor.y + (drift.y - anchor.y) * scale;
             }
 
-            // Keep within canvas bounds
+            // Keep within canvas bounds (left half for left circles)
             const padding = 50;
-            drift.x = Math.max(padding, Math.min(this.canvas.width - padding, drift.x));
+            drift.x = Math.max(padding, Math.min(this.canvas.width / 2, drift.x));
             drift.y = Math.max(padding, Math.min(this.canvas.height - padding, drift.y));
         }
     }
 
     /**
      * Smooth amplitude values based on attack, decay, and inertia
-     * @param {Object} rawAmplitudes - Raw amplitude values from analyzer
+     * @param {Object} rawAmplitudes - Raw amplitude values from analyzer (bass, lowerMid, mid, upperMid, treble)
      * @param {number} deltaTime - Time since last frame in seconds
-     * @returns {Object} - Smoothed amplitude values
+     * @returns {Object} - Smoothed amplitude values for 3 bands (low, mid, high)
      */
     smoothAmplitudes(rawAmplitudes, deltaTime) {
-        const ranges = ['bass', 'lowerMid', 'mid', 'upperMid', 'treble'];
+        // Combine raw frequency bands into 3 emphasis bands
+        const bandTargets = {
+            low: Math.max(rawAmplitudes.bass || 0, rawAmplitudes.lowerMid || 0),
+            mid: rawAmplitudes.mid || 0,
+            high: Math.max(rawAmplitudes.upperMid || 0, rawAmplitudes.treble || 0)
+        };
 
         // Convert parameters to useful values
         // Attack: 0 = instant (high smoothing factor), 100 = very slow (low factor)
@@ -473,9 +476,9 @@ class Visualizer {
         // Inertia: additional smoothing on top of attack/decay
         const inertiaFactor = this.controlParams.inertia / 100;
 
-        for (const range of ranges) {
-            const current = this.smoothedAmplitudes[range];
-            const target = rawAmplitudes[range] || 0;
+        for (const band of ['low', 'mid', 'high']) {
+            const current = this.smoothedAmplitudes[band];
+            const target = bandTargets[band];
 
             // Determine if we're attacking (going up) or decaying (going down)
             const isAttacking = target > current;
@@ -486,27 +489,10 @@ class Visualizer {
 
             // Exponential smoothing
             const smoothingFactor = 1 - Math.exp(-effectiveSpeed * deltaTime * 60);
-            this.smoothedAmplitudes[range] = current + (target - current) * smoothingFactor;
+            this.smoothedAmplitudes[band] = current + (target - current) * smoothingFactor;
         }
 
         return this.smoothedAmplitudes;
-    }
-
-    /**
-     * Get the color for a frequency range based on energy emphasis controls
-     * @param {string} range - Frequency range name
-     * @returns {string} - Hex color
-     */
-    getColorForRange(range) {
-        // Map frequency ranges to their emphasis control colors
-        const colorMap = {
-            bass: this.controlColors.lowEmphasis,
-            lowerMid: this.controlColors.lowEmphasis,
-            mid: this.controlColors.midEmphasis,
-            upperMid: this.controlColors.highEmphasis,
-            treble: this.controlColors.highEmphasis
-        };
-        return colorMap[range] || this.colors[range];
     }
 
     /**
@@ -543,7 +529,7 @@ class Visualizer {
             rawAmplitudes = this.audioAnalyzer.analyze() || rawAmplitudes;
         }
 
-        // Apply energy emphasis to raw amplitudes
+        // Apply energy emphasis to raw amplitudes and combine into 3 bands
         const emphasizedAmplitudes = {
             bass: this.applyEmphasis(rawAmplitudes.bass, this.controlParams.lowEmphasis),
             lowerMid: this.applyEmphasis(rawAmplitudes.lowerMid, this.controlParams.lowEmphasis),
@@ -552,17 +538,18 @@ class Visualizer {
             treble: this.applyEmphasis(rawAmplitudes.treble, this.controlParams.highEmphasis)
         };
 
-        // Apply compression
-        const compressedAmplitudes = {};
-        for (const range of Object.keys(emphasizedAmplitudes)) {
-            compressedAmplitudes[range] = this.applyCompression(
-                emphasizedAmplitudes[range],
+        // Apply smoothing (attack, decay, inertia) BEFORE compression
+        // This ensures motion controls work on full dynamic range
+        const smoothedAmplitudes = this.smoothAmplitudes(emphasizedAmplitudes, deltaTime);
+
+        // Apply compression AFTER smoothing (affects final visual output only)
+        const finalAmplitudes = {};
+        for (const band of Object.keys(smoothedAmplitudes)) {
+            finalAmplitudes[band] = this.applyCompression(
+                smoothedAmplitudes[band],
                 this.controlParams.compression
             );
         }
-
-        // Apply smoothing (attack, decay, inertia)
-        const smoothedAmplitudes = this.smoothAmplitudes(compressedAmplitudes, deltaTime);
 
         // Update drift positions
         this.updateDriftPositions(deltaTime);
@@ -585,23 +572,35 @@ class Visualizer {
         // Overlap increases base opacity for more blending
         const baseOpacityBoost = overlapFactor * 0.3;
 
-        // Draw circles for each frequency range
-        const ranges = ['bass', 'lowerMid', 'mid', 'upperMid', 'treble'];
+        // Define the 3 bands with their colors and amplitude keys
+        const bands = [
+            { name: 'lowLeft', amplitudeKey: 'low', color: this.controlColors.lowEmphasis },
+            { name: 'midLeft', amplitudeKey: 'mid', color: this.controlColors.midEmphasis },
+            { name: 'highLeft', amplitudeKey: 'high', color: this.controlColors.highEmphasis }
+        ];
 
-        for (const range of ranges) {
-            const amplitude = smoothedAmplitudes[range] || 0;
-            const pos = this.driftPositions[range]; // Use drift positions instead of anchor
-            const color = this.getColorForRange(range);
+        // Draw circles for each band (left and mirrored right)
+        for (const band of bands) {
+            const amplitude = finalAmplitudes[band.amplitudeKey] || 0;
+            const leftPos = this.driftPositions[band.name];
+            const color = band.color;
 
-            // Calculate radius based on amplitude
-            const radius = effectiveMinRadius + (effectiveMaxRadius - effectiveMinRadius) * amplitude;
+            // Apply power curve for more dramatic expansion/contraction
+            const expandedAmplitude = Math.pow(amplitude, 0.6);
+
+            // Calculate radius based on expanded amplitude
+            const radius = effectiveMinRadius + (effectiveMaxRadius - effectiveMinRadius) * expandedAmplitude;
 
             // Calculate opacity based on amplitude with overlap boost
-            let opacity = effectiveMinOpacity + (effectiveMaxOpacity - effectiveMinOpacity) * amplitude;
+            let opacity = effectiveMinOpacity + (effectiveMaxOpacity - effectiveMinOpacity) * expandedAmplitude;
             opacity = Math.min(effectiveMaxOpacity, opacity + baseOpacityBoost);
 
-            // Draw the gradient circle
-            this.drawGradientCircle(pos.x, pos.y, radius, color, opacity, isLightBg);
+            // Draw the left circle
+            this.drawGradientCircle(leftPos.x, leftPos.y, radius, color, opacity, isLightBg);
+
+            // Draw the mirrored right circle (horizontally mirrored)
+            const rightX = this.canvas.width - leftPos.x;
+            this.drawGradientCircle(rightX, leftPos.y, radius, color, opacity, isLightBg);
         }
 
         // Reset composite operation
