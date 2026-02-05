@@ -10,26 +10,18 @@ class Visualizer {
         this.isRunning = false;
         this.animationId = null;
 
-        // Circle positions for each emphasis band (anchor positions)
-        // Each band has a left circle; right circle mirrors horizontally
-        this.circlePositions = {
-            lowLeft: { x: 0, y: 0 },
-            midLeft: { x: 0, y: 0 },
-            highLeft: { x: 0, y: 0 }
+        // Drift offsets for organic movement (applied on top of X/Y positions)
+        this.driftOffsets = {
+            low: { x: 0, y: 0 },
+            mid: { x: 0, y: 0 },
+            high: { x: 0, y: 0 }
         };
 
-        // Current drifted positions (actual render positions)
-        this.driftPositions = {
-            lowLeft: { x: 0, y: 0 },
-            midLeft: { x: 0, y: 0 },
-            highLeft: { x: 0, y: 0 }
-        };
-
-        // Drift velocities for organic movement
+        // Drift velocities for brownian motion
         this.driftVelocities = {
-            lowLeft: { x: 0, y: 0 },
-            midLeft: { x: 0, y: 0 },
-            highLeft: { x: 0, y: 0 }
+            low: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 },
+            mid: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 },
+            high: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 }
         };
 
         // Smoothed amplitudes for each emphasis band
@@ -74,6 +66,15 @@ class Visualizer {
             highEmphasis: '#ff9ff3'
         };
 
+        // Emphasis positions (X = distance from center, Y = vertical position)
+        // X: 0 = circles at center, 100 = circles at screen edges
+        // Y: left circle uses Y directly, right circle uses 100-Y
+        this.emphasisPositions = {
+            low: { x: 50, y: 50 },
+            mid: { x: 50, y: 50 },
+            high: { x: 50, y: 50 }
+        };
+
         // Visualization settings
         this.minRadius = 10;        // Minimum circle radius when silent
         this.maxRadius = 1000;      // Maximum circle radius at peak
@@ -88,7 +89,7 @@ class Visualizer {
 
         // Initialize canvas size
         this.resizeCanvas();
-        this.generateRandomPositions();
+
 
         // Handle window resize
         window.addEventListener('resize', () => this.resizeCanvas());
@@ -111,82 +112,54 @@ class Visualizer {
     }
 
     /**
+     * Set emphasis positions from app
+     * @param {Object} positions - Position values for each band {low: {x, y}, mid: {x, y}, high: {x, y}}
+     */
+    setEmphasisPositions(positions) {
+        this.emphasisPositions = { ...this.emphasisPositions, ...positions };
+    }
+
+    /**
+     * Calculate circle positions from emphasis X/Y parameters
+     * X = distance from center (0 = at center, 100 = at edges)
+     * Y = vertical position (left uses Y, right uses 100-Y)
+     * @param {string} band - 'low', 'mid', or 'high'
+     * @returns {Object} - {left: {x, y}, right: {x, y}} in canvas pixels
+     */
+    calculateCirclePositions(band) {
+        const pos = this.emphasisPositions[band];
+        const xParam = pos.x; // 0-100: distance from center
+        const yParam = pos.y; // 0-100: vertical position for left circle
+
+        // Calculate X positions: left at 50-(X/2), right at 50+(X/2) in 0-100 space
+        const leftXNorm = 50 - (xParam / 2);  // 0-50 range
+        const rightXNorm = 50 + (xParam / 2); // 50-100 range
+
+        // Y positions: left uses Y directly, right uses 100-Y
+        const leftYNorm = yParam;
+        const rightYNorm = 100 - yParam;
+
+        // Convert from 0-100 coordinate space to canvas pixels
+        return {
+            left: {
+                x: (leftXNorm / 100) * this.canvas.width,
+                y: (leftYNorm / 100) * this.canvas.height
+            },
+            right: {
+                x: (rightXNorm / 100) * this.canvas.width,
+                y: (rightYNorm / 100) * this.canvas.height
+            }
+        };
+    }
+
+    /**
      * Resize canvas to fill window
      */
     resizeCanvas() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
-
-        // Regenerate positions if canvas was resized significantly
-        // (positions should stay within bounds)
-        this.clampPositions();
     }
 
-    /**
-     * Ensure all circle positions are within canvas bounds
-     */
-    clampPositions() {
-        const padding = 100;
-        for (const range of Object.keys(this.circlePositions)) {
-            const pos = this.circlePositions[range];
-            pos.x = Math.max(padding, Math.min(this.canvas.width - padding, pos.x));
-            pos.y = Math.max(padding, Math.min(this.canvas.height - padding, pos.y));
-        }
-    }
-
-    /**
-     * Generate random positions for all circles
-     */
-    generateRandomPositions() {
-        const padding = 150;
-        const bands = ['lowLeft', 'midLeft', 'highLeft'];
-
-        // Generate positions for left circles (on left half of screen)
-        for (const band of bands) {
-            const pos = {
-                x: padding + Math.random() * (this.canvas.width / 2 - padding * 1.5),
-                y: padding + Math.random() * (this.canvas.height - padding * 2)
-            };
-            this.circlePositions[band] = pos;
-            // Initialize drift positions to match anchor positions
-            this.driftPositions[band] = { x: pos.x, y: pos.y };
-            // Initialize drift velocities with random directions
-            this.driftVelocities[band] = {
-                x: (Math.random() - 0.5) * 2,
-                y: (Math.random() - 0.5) * 2
-            };
-        }
-
-        console.log('Generated new circle positions:', this.circlePositions);
-    }
-
-    /**
-     * Set circle positions (for loading from localStorage)
-     * @param {Array} positions - Array of {x, y} objects
-     */
-    setCirclePositions(positions) {
-        const bands = ['lowLeft', 'midLeft', 'highLeft'];
-        positions.forEach((pos, index) => {
-            if (bands[index] && pos) {
-                this.circlePositions[bands[index]] = { x: pos.x, y: pos.y };
-                // Also update drift positions
-                this.driftPositions[bands[index]] = { x: pos.x, y: pos.y };
-            }
-        });
-        this.clampPositions();
-    }
-
-    /**
-     * Get current circle positions (for saving to localStorage)
-     * @returns {Array} - Array of {x, y} objects
-     */
-    getCirclePositions() {
-        const bands = ['lowLeft', 'midLeft', 'highLeft'];
-        return bands.map(band => ({
-            x: this.circlePositions[band].x,
-            y: this.circlePositions[band].y
-        }));
-    }
 
     /**
      * Set colors for visualization
@@ -385,72 +358,90 @@ class Visualizer {
     }
 
     /**
-     * Update drift positions based on drift amount and anchor stability
+     * Update drift offsets using brownian motion / random walk for organic hovering
      * @param {number} deltaTime - Time since last frame in seconds
      */
-    updateDriftPositions(deltaTime) {
-        const bands = ['lowLeft', 'midLeft', 'highLeft'];
+    updateDriftOffsets(deltaTime) {
+        const bands = ['low', 'mid', 'high'];
         const driftAmount = this.controlParams.drift / 100; // 0-1
         const anchorStability = this.controlParams.anchor / 100; // 0-1
 
-        // When drift is 0, snap to anchor positions immediately
+        // When drift is 0, snap back to anchor
         if (driftAmount === 0) {
             for (const band of bands) {
-                this.driftPositions[band].x = this.circlePositions[band].x;
-                this.driftPositions[band].y = this.circlePositions[band].y;
-                // Reset velocities
-                this.driftVelocities[band].x = 0;
-                this.driftVelocities[band].y = 0;
+                this.driftOffsets[band].x *= 0.85;
+                this.driftOffsets[band].y *= 0.85;
+                if (Math.abs(this.driftOffsets[band].x) < 1) this.driftOffsets[band].x = 0;
+                if (Math.abs(this.driftOffsets[band].y) < 1) this.driftOffsets[band].y = 0;
             }
             return;
         }
 
-        // Drift speed scales with drift amount
-        const driftSpeed = driftAmount * 50; // pixels per second at max
-        // Max drift distance from anchor (more drift = further from anchor)
-        const maxDriftDistance = driftAmount * 400;
+        // Container size: 800-1000px at drift=100
+        const maxDriftRadius = 900 * driftAmount;
+
+        // Anchor stability reduces container size
+        const effectiveRadius = maxDriftRadius * (1 - anchorStability * 0.6);
+
+        // Drift speed: pixels per second (very aggressive)
+        // At drift=100: ~150-200 pixels per second
+        const baseSpeed = 200 * driftAmount;
 
         for (const band of bands) {
-            const anchor = this.circlePositions[band];
-            const drift = this.driftPositions[band];
+            const offset = this.driftOffsets[band];
             const velocity = this.driftVelocities[band];
 
-            // Add some randomness to velocity over time (organic movement)
-            velocity.x += (Math.random() - 0.5) * 0.5 * deltaTime;
-            velocity.y += (Math.random() - 0.5) * 0.5 * deltaTime;
+            // Brownian motion: add random acceleration each frame
+            // More aggressive random impulses
+            const randomStrength = 800 * driftAmount * deltaTime;
+            velocity.x += (Math.random() - 0.5) * randomStrength;
+            velocity.y += (Math.random() - 0.5) * randomStrength;
 
-            // Clamp velocity magnitude
-            const velMag = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
-            if (velMag > 1) {
-                velocity.x /= velMag;
-                velocity.y /= velMag;
+            // Apply friction/damping for smooth movement
+            const friction = 0.97;
+            velocity.x *= friction;
+            velocity.y *= friction;
+
+            // Clamp velocity to max speed
+            const speed = Math.sqrt(velocity.x * velocity.x + velocity.y * velocity.y);
+            if (speed > baseSpeed) {
+                velocity.x = (velocity.x / speed) * baseSpeed;
+                velocity.y = (velocity.y / speed) * baseSpeed;
             }
 
-            // Update drift position
-            drift.x += velocity.x * driftSpeed * deltaTime;
-            drift.y += velocity.y * driftSpeed * deltaTime;
+            // Update position
+            offset.x += velocity.x * deltaTime;
+            offset.y += velocity.y * deltaTime;
 
-            // Pull back toward anchor based on anchor stability
-            const dx = anchor.x - drift.x;
-            const dy = anchor.y - drift.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            // Soft boundary: push back when near edge of container
+            const distFromCenter = Math.sqrt(offset.x * offset.x + offset.y * offset.y);
+            if (distFromCenter > effectiveRadius * 0.7) {
+                // Calculate how far past the soft boundary we are
+                const overshoot = (distFromCenter - effectiveRadius * 0.7) / (effectiveRadius * 0.3);
+                const pushStrength = Math.min(overshoot * 2, 1) * 300 * deltaTime;
 
-            // Stronger pull when far from anchor or when anchor stability is high
-            const pullStrength = anchorStability * 2 + (distance / maxDriftDistance) * (1 - anchorStability);
-            drift.x += dx * pullStrength * deltaTime;
-            drift.y += dy * pullStrength * deltaTime;
-
-            // Hard limit on drift distance
-            if (distance > maxDriftDistance) {
-                const scale = maxDriftDistance / distance;
-                drift.x = anchor.x + (drift.x - anchor.x) * scale;
-                drift.y = anchor.y + (drift.y - anchor.y) * scale;
+                // Push back toward center
+                const angle = Math.atan2(offset.y, offset.x);
+                velocity.x -= Math.cos(angle) * pushStrength;
+                velocity.y -= Math.sin(angle) * pushStrength;
             }
 
-            // Keep within canvas bounds (left half for left circles)
-            const padding = 50;
-            drift.x = Math.max(padding, Math.min(this.canvas.width / 2, drift.x));
-            drift.y = Math.max(padding, Math.min(this.canvas.height - padding, drift.y));
+            // Hard boundary: clamp to container
+            if (distFromCenter > effectiveRadius) {
+                const scale = effectiveRadius / distFromCenter;
+                offset.x *= scale;
+                offset.y *= scale;
+
+                // Bounce velocity inward
+                const angle = Math.atan2(offset.y, offset.x);
+                const normalX = Math.cos(angle);
+                const normalY = Math.sin(angle);
+                const dot = velocity.x * normalX + velocity.y * normalY;
+                if (dot > 0) {
+                    velocity.x -= normalX * dot * 1.5;
+                    velocity.y -= normalY * dot * 1.5;
+                }
+            }
         }
     }
 
@@ -551,8 +542,8 @@ class Visualizer {
             );
         }
 
-        // Update drift positions
-        this.updateDriftPositions(deltaTime);
+        // Update drift offsets for organic movement
+        this.updateDriftOffsets(deltaTime);
 
         // Set composite operation for color blending
         this.ctx.globalCompositeOperation = isLightBg ? 'multiply' : 'screen';
@@ -574,16 +565,25 @@ class Visualizer {
 
         // Define the 3 bands with their colors and amplitude keys
         const bands = [
-            { name: 'lowLeft', amplitudeKey: 'low', color: this.controlColors.lowEmphasis },
-            { name: 'midLeft', amplitudeKey: 'mid', color: this.controlColors.midEmphasis },
-            { name: 'highLeft', amplitudeKey: 'high', color: this.controlColors.highEmphasis }
+            { name: 'low', amplitudeKey: 'low', color: this.controlColors.lowEmphasis },
+            { name: 'mid', amplitudeKey: 'mid', color: this.controlColors.midEmphasis },
+            { name: 'high', amplitudeKey: 'high', color: this.controlColors.highEmphasis }
         ];
 
-        // Draw circles for each band (left and mirrored right)
+        // Draw circles for each band (left and tethered right through center)
         for (const band of bands) {
             const amplitude = finalAmplitudes[band.amplitudeKey] || 0;
-            const leftPos = this.driftPositions[band.name];
             const color = band.color;
+
+            // Calculate base positions from X/Y parameters
+            const positions = this.calculateCirclePositions(band.name);
+
+            // Apply drift offsets for organic movement
+            const driftOffset = this.driftOffsets[band.name];
+            const leftX = positions.left.x + driftOffset.x;
+            const leftY = positions.left.y + driftOffset.y;
+            const rightX = positions.right.x - driftOffset.x; // Mirror drift for right circle
+            const rightY = positions.right.y - driftOffset.y;
 
             // Apply power curve for more dramatic expansion/contraction
             const expandedAmplitude = Math.pow(amplitude, 0.6);
@@ -596,11 +596,10 @@ class Visualizer {
             opacity = Math.min(effectiveMaxOpacity, opacity + baseOpacityBoost);
 
             // Draw the left circle
-            this.drawGradientCircle(leftPos.x, leftPos.y, radius, color, opacity, isLightBg);
+            this.drawGradientCircle(leftX, leftY, radius, color, opacity, isLightBg);
 
-            // Draw the mirrored right circle (horizontally mirrored)
-            const rightX = this.canvas.width - leftPos.x;
-            this.drawGradientCircle(rightX, leftPos.y, radius, color, opacity, isLightBg);
+            // Draw the right circle (tethered through center, mirrored Y and drift)
+            this.drawGradientCircle(rightX, rightY, radius, color, opacity, isLightBg);
         }
 
         // Reset composite operation

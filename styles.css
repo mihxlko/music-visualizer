@@ -33,12 +33,109 @@ body {
     z-index: 100;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 20px;
+    align-items: stretch;
+    gap: 12px;
 }
 
-/* Glassmorphism Container */
-.glass-container {
+/* MFE Panel - Motion/Form/Energy Controls */
+.mfe-panel {
+    position: relative;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Collapse Button */
+.collapse-btn {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    border-radius: 6px;
+    color: #FFFFFF;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s ease;
+}
+
+.collapse-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+.collapse-btn .caret-icon {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.3s ease;
+}
+
+.mfe-panel.collapsed .collapse-btn .caret-icon {
+    transform: rotate(180deg);
+}
+
+/* Collapsed Header */
+.mfe-collapsed-header {
+    display: none;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 52px 16px 20px;
+}
+
+.mfe-panel.collapsed .mfe-collapsed-header {
+    display: flex;
+}
+
+.collapsed-bg-picker {
+    flex-direction: row;
+    gap: 0;
+}
+
+.collapsed-bg-picker input[type="color"] {
+    width: 32px;
+    height: 32px;
+}
+
+.collapsed-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.collapsed-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: #FFFFFF;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    opacity: 0.8;
+    padding: 0 8px;
+}
+
+/* Expanded Content */
+.mfe-expanded-content {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    padding: 16px 24px;
+    transition: opacity 0.2s ease;
+}
+
+.mfe-panel.collapsed .mfe-expanded-content {
+    display: none;
+}
+
+/* Play Panel */
+.play-panel {
     display: flex;
     align-items: center;
     gap: 24px;
@@ -46,9 +143,10 @@ body {
     background: rgba(255, 255, 255, 0.1);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border-radius: 20px;
+    border-radius: 16px;
     border: 1px solid rgba(255, 255, 255, 0.15);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    width: 100%;
 }
 
 /* Control Sections */
@@ -64,6 +162,7 @@ body {
     flex-direction: column;
     gap: 6px;
     min-width: 300px;
+    flex: 1;
 }
 
 /* Buttons */
@@ -214,19 +313,7 @@ body {
     display: none;
 }
 
-/* Bottom Panel - Atmospheric Motion Fields Controls */
-.bottom-panel {
-    display: flex;
-    align-items: flex-start;
-    gap: 0;
-    padding: 16px 24px;
-    background: rgba(255, 255, 255, 0.08);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border-radius: 16px;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
+/* Legacy: bottom-panel styles moved to mfe-expanded-content */
 
 /* Background Color Section */
 .background-color-section {
@@ -386,6 +473,88 @@ body {
     opacity: 0.7;
 }
 
+/* Position Control (X/Y) */
+.position-control {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.position-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #FFFFFF;
+    opacity: 0.7;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.position-input-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 2px 6px;
+}
+
+.position-value {
+    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 11px;
+    font-weight: 500;
+    color: #FFFFFF;
+    width: 32px;
+    text-align: center;
+    background: transparent;
+    border: none;
+    outline: none;
+    -moz-appearance: textfield;
+}
+
+.position-value::-webkit-outer-spin-button,
+.position-value::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.position-value:focus {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.position-arrows {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+}
+
+.arrow-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: 3px;
+    color: #FFFFFF;
+    font-size: 8px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: background 0.15s ease;
+}
+
+.arrow-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.arrow-btn:active {
+    background: rgba(255, 255, 255, 0.4);
+}
+
 /* Color Swatch */
 .color-swatch {
     width: 28px;
@@ -415,7 +584,7 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 1200px) {
-    .bottom-panel {
+    .mfe-expanded-content {
         flex-wrap: wrap;
         justify-content: center;
         max-width: 90vw;
@@ -436,7 +605,7 @@ body {
 }
 
 @media (max-width: 768px) {
-    .glass-container {
+    .play-panel {
         flex-direction: column;
         gap: 16px;
         padding: 20px;
@@ -446,7 +615,7 @@ body {
         min-width: 250px;
     }
 
-    .bottom-panel {
+    .mfe-expanded-content {
         flex-direction: column;
         align-items: stretch;
         gap: 16px;
@@ -469,5 +638,10 @@ body {
 
     .control-label {
         min-width: 80px;
+    }
+
+    .mfe-collapsed-header {
+        flex-wrap: wrap;
+        gap: 12px;
     }
 }

@@ -33,8 +33,11 @@ class MusicVisualizerApp {
             volumeIcon: document.getElementById('volume-icon'),
             muteIcon: document.getElementById('mute-icon'),
             colorPickers: {
-                background: document.getElementById('color-background')
-            }
+                background: document.getElementById('color-background'),
+                backgroundCollapsed: document.getElementById('color-background-collapsed')
+            },
+            mfePanel: document.getElementById('mfe-panel'),
+            mfeCollapseBtn: document.getElementById('mfe-collapse-btn')
         };
 
         // Atmospheric Motion Fields controls
@@ -78,6 +81,16 @@ class MusicVisualizerApp {
             highEmphasis: '#ff9ff3'
         };
 
+        // Position controls for emphasis circles (X = distance, Y = vertical position)
+        this.positionControls = {
+            lowX: { value: document.getElementById('value-low-x'), current: 50 },
+            lowY: { value: document.getElementById('value-low-y'), current: 50 },
+            midX: { value: document.getElementById('value-mid-x'), current: 50 },
+            midY: { value: document.getElementById('value-mid-y'), current: 50 },
+            highX: { value: document.getElementById('value-high-x'), current: 50 },
+            highY: { value: document.getElementById('value-high-y'), current: 50 }
+        };
+
         // Initialize
         this.init();
     }
@@ -99,9 +112,10 @@ class MusicVisualizerApp {
         // Load saved state from localStorage
         this.loadState();
 
-        // Initialize visualizer with control parameters and colors
+        // Initialize visualizer with control parameters, colors, and positions
         this.updateVisualizerParams();
         this.updateVisualizerColors();
+        this.updateVisualizerPositions();
 
         // Start visualizer with static render
         this.visualizer.renderStatic();
@@ -134,8 +148,20 @@ class MusicVisualizerApp {
         this.audio.addEventListener('play', () => this.onPlay());
         this.audio.addEventListener('pause', () => this.onPause());
 
-        // Background color picker
-        this.elements.colorPickers.background.addEventListener('input', (e) => this.setColor('background', e.target.value));
+        // Background color pickers (both expanded and collapsed versions)
+        this.elements.colorPickers.background.addEventListener('input', (e) => {
+            this.setColor('background', e.target.value);
+            // Sync collapsed picker
+            this.elements.colorPickers.backgroundCollapsed.value = e.target.value;
+        });
+        this.elements.colorPickers.backgroundCollapsed.addEventListener('input', (e) => {
+            this.setColor('background', e.target.value);
+            // Sync expanded picker
+            this.elements.colorPickers.background.value = e.target.value;
+        });
+
+        // MFE Panel collapse toggle
+        this.elements.mfeCollapseBtn.addEventListener('click', () => this.toggleMfeCollapse());
 
         // Atmospheric Motion Fields control event listeners
         for (const [name, control] of Object.entries(this.controls)) {
@@ -171,6 +197,217 @@ class MusicVisualizerApp {
                 });
             }
         }
+
+        // Position control arrow buttons with hold-to-change
+        this.arrowHoldState = null; // Track current hold state
+        const arrowButtons = document.querySelectorAll('.arrow-btn');
+        arrowButtons.forEach(btn => {
+            btn.addEventListener('mousedown', (e) => this.startArrowHold(e));
+            btn.addEventListener('mouseup', () => this.stopArrowHold());
+            btn.addEventListener('mouseleave', () => this.stopArrowHold());
+            // Touch support
+            btn.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                this.startArrowHold(e);
+            });
+            btn.addEventListener('touchend', () => this.stopArrowHold());
+            btn.addEventListener('touchcancel', () => this.stopArrowHold());
+        });
+
+        // Position value input fields (direct typing)
+        const positionInputs = document.querySelectorAll('.position-value');
+        positionInputs.forEach(input => {
+            input.addEventListener('input', (e) => this.handlePositionInput(e));
+            input.addEventListener('change', (e) => this.handlePositionChange(e));
+            input.addEventListener('blur', (e) => this.handlePositionBlur(e));
+        });
+    }
+
+    /**
+     * Start arrow hold behavior
+     * @param {Event} e - Mouse/touch event
+     */
+    startArrowHold(e) {
+        const btn = e.currentTarget;
+        const target = btn.dataset.target;
+        const direction = btn.dataset.dir;
+        const controlKey = target.replace('-', '').replace('x', 'X').replace('y', 'Y');
+
+        if (!this.positionControls[controlKey]) return;
+
+        // Clear any existing hold
+        this.stopArrowHold();
+
+        // Initialize hold state
+        this.arrowHoldState = {
+            controlKey,
+            direction,
+            startTime: Date.now(),
+            lastTick: Date.now(),
+            intervalId: null
+        };
+
+        // Immediately apply first change
+        this.applyArrowChange(controlKey, direction);
+
+        // Start the hold interval
+        this.arrowHoldState.intervalId = setInterval(() => {
+            this.processArrowHold();
+        }, 50); // Check every 50ms for smooth acceleration
+    }
+
+    /**
+     * Process arrow hold - applies changes with acceleration
+     */
+    processArrowHold() {
+        if (!this.arrowHoldState) return;
+
+        const { controlKey, direction, startTime, lastTick } = this.arrowHoldState;
+        const now = Date.now();
+        const holdDuration = now - startTime;
+
+        // Determine interval based on hold duration
+        // First 2 seconds: slow (every 200ms)
+        // After 2 seconds: fast (every 50ms)
+        const slowInterval = 200;
+        const fastInterval = 50;
+        const accelerationThreshold = 2000; // 2 seconds
+
+        const currentInterval = holdDuration < accelerationThreshold ? slowInterval : fastInterval;
+
+        // Check if enough time has passed since last tick
+        if (now - lastTick >= currentInterval) {
+            this.applyArrowChange(controlKey, direction);
+            this.arrowHoldState.lastTick = now;
+        }
+    }
+
+    /**
+     * Apply a single arrow change
+     * @param {string} controlKey - The control key (e.g., 'lowX')
+     * @param {string} direction - 'up' or 'down'
+     */
+    applyArrowChange(controlKey, direction) {
+        const control = this.positionControls[controlKey];
+        if (!control) return;
+
+        const delta = direction === 'up' ? 1 : -1;
+
+        // Update value with clamping to 0-100
+        control.current = Math.max(0, Math.min(100, control.current + delta));
+
+        // Update display
+        if (control.value) {
+            control.value.value = control.current;
+        }
+
+        // Update visualizer positions in real-time
+        this.updateVisualizerPositions();
+    }
+
+    /**
+     * Stop arrow hold behavior
+     */
+    stopArrowHold() {
+        if (this.arrowHoldState) {
+            if (this.arrowHoldState.intervalId) {
+                clearInterval(this.arrowHoldState.intervalId);
+            }
+            this.arrowHoldState = null;
+            // Save state when hold ends
+            this.saveState();
+        }
+    }
+
+    /**
+     * Handle direct input in position fields
+     * @param {Event} e - Input event
+     */
+    handlePositionInput(e) {
+        const input = e.target;
+        const id = input.id;
+        const controlKey = id.replace('value-', '').replace('-', '').replace('x', 'X').replace('y', 'Y');
+
+        if (!this.positionControls[controlKey]) return;
+
+        let value = parseInt(input.value) || 0;
+        // Clamp to 0-100
+        value = Math.max(0, Math.min(100, value));
+
+        this.positionControls[controlKey].current = value;
+        this.updateVisualizerPositions();
+    }
+
+    /**
+     * Handle change event on position fields (when user finishes editing)
+     * @param {Event} e - Change event
+     */
+    handlePositionChange(e) {
+        const input = e.target;
+        const id = input.id;
+        const controlKey = id.replace('value-', '').replace('-', '').replace('x', 'X').replace('y', 'Y');
+
+        if (!this.positionControls[controlKey]) return;
+
+        let value = parseInt(input.value) || 0;
+        // Clamp to 0-100
+        value = Math.max(0, Math.min(100, value));
+
+        this.positionControls[controlKey].current = value;
+        input.value = value; // Update display with clamped value
+
+        this.updateVisualizerPositions();
+        this.saveState();
+    }
+
+    /**
+     * Handle blur event on position fields
+     * @param {Event} e - Blur event
+     */
+    handlePositionBlur(e) {
+        const input = e.target;
+        const id = input.id;
+        const controlKey = id.replace('value-', '').replace('-', '').replace('x', 'X').replace('y', 'Y');
+
+        if (!this.positionControls[controlKey]) return;
+
+        // Ensure the displayed value matches the clamped current value
+        input.value = this.positionControls[controlKey].current;
+    }
+
+    /**
+     * Update visualizer with current position control values
+     */
+    updateVisualizerPositions() {
+        if (!this.visualizer) return;
+
+        const positions = {
+            low: { x: this.positionControls.lowX.current, y: this.positionControls.lowY.current },
+            mid: { x: this.positionControls.midX.current, y: this.positionControls.midY.current },
+            high: { x: this.positionControls.highX.current, y: this.positionControls.highY.current }
+        };
+
+        this.visualizer.setEmphasisPositions(positions);
+    }
+
+    /**
+     * Reset emphasis positions to defaults (50, 50)
+     */
+    resetEmphasisPositions() {
+        for (const key of Object.keys(this.positionControls)) {
+            this.positionControls[key].current = 50;
+            if (this.positionControls[key].value) {
+                this.positionControls[key].value.value = 50;
+            }
+        }
+        this.updateVisualizerPositions();
+    }
+
+    /**
+     * Toggle MFE panel collapse state
+     */
+    toggleMfeCollapse() {
+        this.elements.mfePanel.classList.toggle('collapsed');
     }
 
     /**
@@ -226,17 +463,13 @@ class MusicVisualizerApp {
         // Check for saved colors/positions for this song
         const savedData = this.getSongData(file.name);
         if (savedData) {
-            // Load saved colors
+            // Load saved colors and positions
             this.loadColors(savedData);
-            // Load saved positions
-            if (savedData.circlePositions) {
-                this.visualizer.setCirclePositions(savedData.circlePositions);
-            }
         } else {
             // Generate new harmonious colors
             this.generateHarmoniousColors();
-            // Generate new random positions
-            this.visualizer.generateRandomPositions();
+            // Reset emphasis positions to defaults (50, 50)
+            this.resetEmphasisPositions();
         }
 
         // Enable controls
@@ -260,6 +493,7 @@ class MusicVisualizerApp {
         // Generate background color
         const backgroundColor = this.hslToHex((baseHue + 180) % 360, 30, 15);
         this.elements.colorPickers.background.value = backgroundColor;
+        this.elements.colorPickers.backgroundCollapsed.value = backgroundColor;
         this.visualizer.setColor('background', backgroundColor);
 
         // Generate harmonious colors for frequency emphasis controls (these tint the circles)
@@ -403,6 +637,7 @@ class MusicVisualizerApp {
         // Load background color
         if (data.baseBackground) {
             this.elements.colorPickers.background.value = data.baseBackground;
+            this.elements.colorPickers.backgroundCollapsed.value = data.baseBackground;
             this.visualizer.setColor('background', data.baseBackground);
         }
 
@@ -429,9 +664,22 @@ class MusicVisualizerApp {
             }
         }
 
+        // Load emphasis positions if saved
+        if (data.emphasisPositions) {
+            for (const [key, val] of Object.entries(data.emphasisPositions)) {
+                if (this.positionControls[key]) {
+                    this.positionControls[key].current = val;
+                    if (this.positionControls[key].value) {
+                        this.positionControls[key].value.value = val;
+                    }
+                }
+            }
+        }
+
         // Sync visualizer with loaded values
         this.updateVisualizerParams();
         this.updateVisualizerColors();
+        this.updateVisualizerPositions();
     }
 
     /**
@@ -531,7 +779,14 @@ class MusicVisualizerApp {
                 baseBackground: this.elements.colorPickers.background.value,
                 controlValues: { ...this.controlValues },
                 controlColors: { ...this.controlColors },
-                circlePositions: this.visualizer.getCirclePositions()
+                emphasisPositions: {
+                    lowX: this.positionControls.lowX.current,
+                    lowY: this.positionControls.lowY.current,
+                    midX: this.positionControls.midX.current,
+                    midY: this.positionControls.midY.current,
+                    highX: this.positionControls.highX.current,
+                    highY: this.positionControls.highY.current
+                }
             };
 
             const data = {
@@ -552,6 +807,9 @@ class MusicVisualizerApp {
     loadState() {
         try {
             const data = JSON.parse(localStorage.getItem('musicVisualizerData') || '{}');
+
+            // Sync collapsed background picker with expanded one
+            this.elements.colorPickers.backgroundCollapsed.value = this.elements.colorPickers.background.value;
 
             // Apply background color to visualizer
             this.visualizer.setColor('background', this.elements.colorPickers.background.value);

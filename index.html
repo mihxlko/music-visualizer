@@ -15,56 +15,28 @@
 
     <!-- Control Panel (Top Layer) -->
     <div class="control-panel">
-        <!-- Glass Container -->
-        <div class="glass-container">
-            <!-- Left Section: Upload, Play, Stop -->
-            <div class="controls-left">
-                <label class="upload-btn" title="Upload MP3 or M4A">
-                    <input type="file" id="audio-upload" accept="audio/mp3,audio/mpeg,.m4a,audio/mp4,audio/x-m4a" hidden>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
-                    </svg>
-                </label>
-                <button id="play-btn" class="control-btn" title="Play" disabled>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <polygon points="6,4 20,12 6,20"/>
-                    </svg>
-                </button>
-                <button id="stop-btn" class="control-btn" title="Stop" disabled>
-                    <svg viewBox="0 0 24 24" fill="currentColor">
-                        <rect x="6" y="6" width="12" height="12"/>
-                    </svg>
-                </button>
-            </div>
+        <!-- MFE Panel - Motion/Form/Energy Controls -->
+        <div class="mfe-panel" id="mfe-panel">
+            <!-- Collapse Toggle Button -->
+            <button class="collapse-btn" id="mfe-collapse-btn" title="Collapse/Expand">
+                <svg viewBox="0 0 24 24" fill="currentColor" class="caret-icon">
+                    <path d="M7 10l5 5 5-5z"/>
+                </svg>
+            </button>
 
-            <!-- Center Section: Progress Bar & Time -->
-            <div class="controls-center">
-                <div class="progress-container">
-                    <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" disabled>
+            <!-- Collapsed Header (visible only when collapsed) -->
+            <div class="mfe-collapsed-header" id="mfe-collapsed-header">
+                <div class="color-picker-item collapsed-bg-picker">
+                    <input type="color" id="color-background-collapsed" value="#1a1a2e">
                 </div>
-                <div class="time-display">
-                    <span id="current-time">00:00</span>
-                    <span class="time-separator">|</span>
-                    <span id="total-time">00:00</span>
-                </div>
+                <div class="collapsed-divider"></div>
+                <span class="collapsed-section-title">Motion</span>
+                <span class="collapsed-section-title">Form</span>
+                <span class="collapsed-section-title">Energy</span>
             </div>
 
-            <!-- Right Section: Volume & Mute -->
-            <div class="controls-right">
-                <input type="range" id="volume-slider" min="0" max="100" value="100" step="1">
-                <button id="mute-btn" class="control-btn" title="Mute">
-                    <svg viewBox="0 0 24 24" fill="currentColor" id="volume-icon">
-                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
-                    </svg>
-                    <svg viewBox="0 0 24 24" fill="currentColor" id="mute-icon" class="hidden">
-                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-
-        <!-- Bottom Panel - Atmospheric Motion Fields Controls -->
-        <div class="bottom-panel">
+            <!-- Expanded Content -->
+            <div class="mfe-expanded-content" id="mfe-expanded-content">
             <!-- Background Color -->
             <div class="background-color-section">
                 <div class="color-picker-item">
@@ -173,6 +145,26 @@
                             <input type="range" class="control-slider" id="slider-low-emphasis" min="0" max="100" value="50">
                             <span class="slider-value" id="value-low-emphasis">50</span>
                         </div>
+                        <div class="position-control">
+                            <span class="position-label">X</span>
+                            <div class="position-input-group">
+                                <input type="number" class="position-value" id="value-low-x" value="50" min="0" max="100">
+                                <div class="position-arrows">
+                                    <button class="arrow-btn arrow-up" data-target="low-x" data-dir="up">▲</button>
+                                    <button class="arrow-btn arrow-down" data-target="low-x" data-dir="down">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="position-control">
+                            <span class="position-label">Y</span>
+                            <div class="position-input-group">
+                                <input type="number" class="position-value" id="value-low-y" value="50" min="0" max="100">
+                                <div class="position-arrows">
+                                    <button class="arrow-btn arrow-up" data-target="low-y" data-dir="up">▲</button>
+                                    <button class="arrow-btn arrow-down" data-target="low-y" data-dir="down">▼</button>
+                                </div>
+                            </div>
+                        </div>
                         <input type="color" class="color-swatch" id="color-low-emphasis" value="#e94560">
                     </div>
                     <div class="control-row">
@@ -181,6 +173,26 @@
                             <input type="range" class="control-slider" id="slider-mid-emphasis" min="0" max="100" value="50">
                             <span class="slider-value" id="value-mid-emphasis">50</span>
                         </div>
+                        <div class="position-control">
+                            <span class="position-label">X</span>
+                            <div class="position-input-group">
+                                <input type="number" class="position-value" id="value-mid-x" value="50" min="0" max="100">
+                                <div class="position-arrows">
+                                    <button class="arrow-btn arrow-up" data-target="mid-x" data-dir="up">▲</button>
+                                    <button class="arrow-btn arrow-down" data-target="mid-x" data-dir="down">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="position-control">
+                            <span class="position-label">Y</span>
+                            <div class="position-input-group">
+                                <input type="number" class="position-value" id="value-mid-y" value="50" min="0" max="100">
+                                <div class="position-arrows">
+                                    <button class="arrow-btn arrow-up" data-target="mid-y" data-dir="up">▲</button>
+                                    <button class="arrow-btn arrow-down" data-target="mid-y" data-dir="down">▼</button>
+                                </div>
+                            </div>
+                        </div>
                         <input type="color" class="color-swatch" id="color-mid-emphasis" value="#feca57">
                     </div>
                     <div class="control-row">
@@ -188,6 +200,26 @@
                         <div class="slider-container">
                             <input type="range" class="control-slider" id="slider-high-emphasis" min="0" max="100" value="50">
                             <span class="slider-value" id="value-high-emphasis">50</span>
+                        </div>
+                        <div class="position-control">
+                            <span class="position-label">X</span>
+                            <div class="position-input-group">
+                                <input type="number" class="position-value" id="value-high-x" value="50" min="0" max="100">
+                                <div class="position-arrows">
+                                    <button class="arrow-btn arrow-up" data-target="high-x" data-dir="up">▲</button>
+                                    <button class="arrow-btn arrow-down" data-target="high-x" data-dir="down">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="position-control">
+                            <span class="position-label">Y</span>
+                            <div class="position-input-group">
+                                <input type="number" class="position-value" id="value-high-y" value="50" min="0" max="100">
+                                <div class="position-arrows">
+                                    <button class="arrow-btn arrow-up" data-target="high-y" data-dir="up">▲</button>
+                                    <button class="arrow-btn arrow-down" data-target="high-y" data-dir="down">▼</button>
+                                </div>
+                            </div>
                         </div>
                         <input type="color" class="color-swatch" id="color-high-emphasis" value="#ff9ff3">
                     </div>
@@ -203,6 +235,55 @@
                         </div>
                     </div>
                 </div>
+            </div>
+            </div>
+        </div>
+
+        <!-- Play Panel -->
+        <div class="play-panel">
+            <!-- Left Section: Upload, Play, Stop -->
+            <div class="controls-left">
+                <label class="upload-btn" title="Upload MP3 or M4A">
+                    <input type="file" id="audio-upload" accept="audio/mp3,audio/mpeg,.m4a,audio/mp4,audio/x-m4a" hidden>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/>
+                    </svg>
+                </label>
+                <button id="play-btn" class="control-btn" title="Play" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="6,4 20,12 6,20"/>
+                    </svg>
+                </button>
+                <button id="stop-btn" class="control-btn" title="Stop" disabled>
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="6" y="6" width="12" height="12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Center Section: Progress Bar & Time -->
+            <div class="controls-center">
+                <div class="progress-container">
+                    <input type="range" id="progress-bar" min="0" max="100" value="0" step="0.1" disabled>
+                </div>
+                <div class="time-display">
+                    <span id="current-time">00:00</span>
+                    <span class="time-separator">|</span>
+                    <span id="total-time">00:00</span>
+                </div>
+            </div>
+
+            <!-- Right Section: Volume & Mute -->
+            <div class="controls-right">
+                <input type="range" id="volume-slider" min="0" max="100" value="100" step="1">
+                <button id="mute-btn" class="control-btn" title="Mute">
+                    <svg viewBox="0 0 24 24" fill="currentColor" id="volume-icon">
+                        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02z"/>
+                    </svg>
+                    <svg viewBox="0 0 24 24" fill="currentColor" id="mute-icon" class="hidden">
+                        <path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
