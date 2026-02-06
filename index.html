@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Visualization Canvas (Bottom Layer) -->
@@ -37,6 +37,8 @@
 
             <!-- Expanded Content -->
             <div class="mfe-expanded-content" id="mfe-expanded-content">
+            <!-- Top Row: Background, Motion, Form -->
+            <div class="mfe-top-row">
             <!-- Background Color -->
             <div class="background-color-section">
                 <div class="color-picker-item">
@@ -87,6 +89,17 @@
                         </div>
                     </div>
                 </div>
+
+                <div class="subsection">
+                    <h4 class="subsection-title">Dynamics</h4>
+                    <div class="control-row">
+                        <label class="control-label">Compression</label>
+                        <div class="slider-container">
+                            <input type="range" class="control-slider" id="slider-compression" min="0" max="100" value="0">
+                            <span class="slider-value" id="value-compression">0</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Section Divider -->
@@ -101,8 +114,8 @@
                     <div class="control-row">
                         <label class="control-label">Field Scale</label>
                         <div class="slider-container">
-                            <input type="range" class="control-slider" id="slider-field-scale" min="0" max="100" value="25">
-                            <span class="slider-value" id="value-field-scale">25</span>
+                            <input type="range" class="control-slider" id="slider-field-scale" min="0" max="100" value="0">
+                            <span class="slider-value" id="value-field-scale">0</span>
                         </div>
                     </div>
                 </div>
@@ -128,116 +141,122 @@
                         </div>
                     </div>
                 </div>
-            </div>
-
-            <!-- Section Divider -->
-            <div class="section-divider"></div>
-
-            <!-- Energy Section -->
-            <div class="control-section">
-                <h3 class="section-title">Energy</h3>
 
                 <div class="subsection">
-                    <h4 class="subsection-title">Emphasis</h4>
+                    <h4 class="subsection-title">Grain</h4>
                     <div class="control-row">
-                        <label class="control-label">Low Emphasis</label>
+                        <label class="control-label">Grain Intensity</label>
                         <div class="slider-container">
-                            <input type="range" class="control-slider" id="slider-low-emphasis" min="0" max="100" value="50">
-                            <span class="slider-value" id="value-low-emphasis">50</span>
-                        </div>
-                        <div class="position-control">
-                            <span class="position-label">X</span>
-                            <div class="position-input-group">
-                                <input type="number" class="position-value" id="value-low-x" value="50" min="0" max="100">
-                                <div class="position-arrows">
-                                    <button class="arrow-btn arrow-up" data-target="low-x" data-dir="up">▲</button>
-                                    <button class="arrow-btn arrow-down" data-target="low-x" data-dir="down">▼</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="position-control">
-                            <span class="position-label">Y</span>
-                            <div class="position-input-group">
-                                <input type="number" class="position-value" id="value-low-y" value="50" min="0" max="100">
-                                <div class="position-arrows">
-                                    <button class="arrow-btn arrow-up" data-target="low-y" data-dir="up">▲</button>
-                                    <button class="arrow-btn arrow-down" data-target="low-y" data-dir="down">▼</button>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="color" class="color-swatch" id="color-low-emphasis" value="#e94560">
-                    </div>
-                    <div class="control-row">
-                        <label class="control-label">Mid Emphasis</label>
-                        <div class="slider-container">
-                            <input type="range" class="control-slider" id="slider-mid-emphasis" min="0" max="100" value="50">
-                            <span class="slider-value" id="value-mid-emphasis">50</span>
-                        </div>
-                        <div class="position-control">
-                            <span class="position-label">X</span>
-                            <div class="position-input-group">
-                                <input type="number" class="position-value" id="value-mid-x" value="50" min="0" max="100">
-                                <div class="position-arrows">
-                                    <button class="arrow-btn arrow-up" data-target="mid-x" data-dir="up">▲</button>
-                                    <button class="arrow-btn arrow-down" data-target="mid-x" data-dir="down">▼</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="position-control">
-                            <span class="position-label">Y</span>
-                            <div class="position-input-group">
-                                <input type="number" class="position-value" id="value-mid-y" value="50" min="0" max="100">
-                                <div class="position-arrows">
-                                    <button class="arrow-btn arrow-up" data-target="mid-y" data-dir="up">▲</button>
-                                    <button class="arrow-btn arrow-down" data-target="mid-y" data-dir="down">▼</button>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="color" class="color-swatch" id="color-mid-emphasis" value="#feca57">
-                    </div>
-                    <div class="control-row">
-                        <label class="control-label">High Emphasis</label>
-                        <div class="slider-container">
-                            <input type="range" class="control-slider" id="slider-high-emphasis" min="0" max="100" value="50">
-                            <span class="slider-value" id="value-high-emphasis">50</span>
-                        </div>
-                        <div class="position-control">
-                            <span class="position-label">X</span>
-                            <div class="position-input-group">
-                                <input type="number" class="position-value" id="value-high-x" value="50" min="0" max="100">
-                                <div class="position-arrows">
-                                    <button class="arrow-btn arrow-up" data-target="high-x" data-dir="up">▲</button>
-                                    <button class="arrow-btn arrow-down" data-target="high-x" data-dir="down">▼</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="position-control">
-                            <span class="position-label">Y</span>
-                            <div class="position-input-group">
-                                <input type="number" class="position-value" id="value-high-y" value="50" min="0" max="100">
-                                <div class="position-arrows">
-                                    <button class="arrow-btn arrow-up" data-target="high-y" data-dir="up">▲</button>
-                                    <button class="arrow-btn arrow-down" data-target="high-y" data-dir="down">▼</button>
-                                </div>
-                            </div>
-                        </div>
-                        <input type="color" class="color-swatch" id="color-high-emphasis" value="#ff9ff3">
-                    </div>
-                </div>
-
-                <div class="subsection">
-                    <h4 class="subsection-title">Dynamics</h4>
-                    <div class="control-row">
-                        <label class="control-label">Compression</label>
-                        <div class="slider-container">
-                            <input type="range" class="control-slider" id="slider-compression" min="0" max="100" value="0">
-                            <span class="slider-value" id="value-compression">0</span>
+                            <input type="range" class="control-slider" id="slider-grain" min="0" max="100" value="0">
+                            <span class="slider-value" id="value-grain">0</span>
                         </div>
                     </div>
                 </div>
             </div>
-            </div>
-        </div>
+            </div><!-- end mfe-top-row -->
+
+            <!-- Horizontal Divider -->
+            <div class="horizontal-divider"></div>
+
+            <!-- Energy Section (Full Width) -->
+            <div class="energy-section">
+            <h3 class="section-title">Energy</h3>
+
+            <div class="subsection">
+                <h4 class="subsection-title">Emphasis</h4>
+
+                <div class="emphasis-panels-row">
+                    <!-- Low Emphasis Panel -->
+                    <div class="emphasis-panel">
+                        <div class="emphasis-main-row">
+                            <label class="control-label">Low Emphasis</label>
+                            <div class="slider-container">
+                                <input type="range" class="control-slider" id="slider-low-emphasis" min="0" max="100" value="50">
+                                <span class="slider-value" id="value-low-emphasis">50</span>
+                            </div>
+                            <input type="color" class="color-swatch" id="color-low-emphasis" value="#e94560">
+                        </div>
+                        <div class="position-subsection">
+                            <span class="position-subsection-label">Position</span>
+                            <div class="position-slider-row">
+                                <label class="position-slider-label">X</label>
+                                <div class="slider-container">
+                                    <input type="range" class="control-slider" id="slider-low-x" min="0" max="100" value="50">
+                                    <span class="slider-value" id="value-low-x">50</span>
+                                </div>
+                            </div>
+                            <div class="position-slider-row">
+                                <label class="position-slider-label">Y</label>
+                                <div class="slider-container">
+                                    <input type="range" class="control-slider" id="slider-low-y" min="0" max="100" value="50">
+                                    <span class="slider-value" id="value-low-y">50</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mid Emphasis Panel -->
+                    <div class="emphasis-panel">
+                        <div class="emphasis-main-row">
+                            <label class="control-label">Mid Emphasis</label>
+                            <div class="slider-container">
+                                <input type="range" class="control-slider" id="slider-mid-emphasis" min="0" max="100" value="50">
+                                <span class="slider-value" id="value-mid-emphasis">50</span>
+                            </div>
+                            <input type="color" class="color-swatch" id="color-mid-emphasis" value="#feca57">
+                        </div>
+                        <div class="position-subsection">
+                            <span class="position-subsection-label">Position</span>
+                            <div class="position-slider-row">
+                                <label class="position-slider-label">X</label>
+                                <div class="slider-container">
+                                    <input type="range" class="control-slider" id="slider-mid-x" min="0" max="100" value="50">
+                                    <span class="slider-value" id="value-mid-x">50</span>
+                                </div>
+                            </div>
+                            <div class="position-slider-row">
+                                <label class="position-slider-label">Y</label>
+                                <div class="slider-container">
+                                    <input type="range" class="control-slider" id="slider-mid-y" min="0" max="100" value="50">
+                                    <span class="slider-value" id="value-mid-y">50</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- High Emphasis Panel -->
+                    <div class="emphasis-panel">
+                        <div class="emphasis-main-row">
+                            <label class="control-label">High Emphasis</label>
+                            <div class="slider-container">
+                                <input type="range" class="control-slider" id="slider-high-emphasis" min="0" max="100" value="50">
+                                <span class="slider-value" id="value-high-emphasis">50</span>
+                            </div>
+                            <input type="color" class="color-swatch" id="color-high-emphasis" value="#ff9ff3">
+                        </div>
+                        <div class="position-subsection">
+                            <span class="position-subsection-label">Position</span>
+                            <div class="position-slider-row">
+                                <label class="position-slider-label">X</label>
+                                <div class="slider-container">
+                                    <input type="range" class="control-slider" id="slider-high-x" min="0" max="100" value="50">
+                                    <span class="slider-value" id="value-high-x">50</span>
+                                </div>
+                            </div>
+                            <div class="position-slider-row">
+                                <label class="position-slider-label">Y</label>
+                                <div class="slider-container">
+                                    <input type="range" class="control-slider" id="slider-high-y" min="0" max="100" value="50">
+                                    <span class="slider-value" id="value-high-y">50</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div><!-- end emphasis-panels-row -->
+            </div><!-- end subsection -->
+            </div><!-- end energy-section -->
+        </div><!-- end mfe-expanded-content -->
+        </div><!-- end mfe-panel -->
 
         <!-- Play Panel -->
         <div class="play-panel">

@@ -6,7 +6,7 @@
 }
 
 body {
-    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: 'Geist Mono', monospace;
     background: #000;
     color: #FFFFFF;
     overflow: hidden;
@@ -124,14 +124,22 @@ body {
 /* Expanded Content */
 .mfe-expanded-content {
     display: flex;
-    align-items: flex-start;
+    flex-direction: column;
     gap: 0;
-    padding: 16px 24px;
+    padding: 16px 0 0 0;
     transition: opacity 0.2s ease;
 }
 
 .mfe-panel.collapsed .mfe-expanded-content {
     display: none;
+}
+
+/* Top Row: Background, Motion, Form */
+.mfe-top-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+    padding: 0 24px;
 }
 
 /* Play Panel */
@@ -363,12 +371,42 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Section Divider */
+/* Section Divider (vertical, between Motion and Form) */
 .section-divider {
     width: 1px;
     align-self: stretch;
     background: rgba(255, 255, 255, 0.15);
     margin: 0 20px;
+}
+
+/* Horizontal Divider (between Motion/Form and Energy) */
+.horizontal-divider {
+    width: 100%;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 16px 0;
+}
+
+/* Energy Section (full width below Motion/Form) */
+.energy-section {
+    width: 100%;
+    padding: 0 24px 16px 24px;
+}
+
+.energy-section .section-title {
+    margin-bottom: 8px;
+}
+
+/* Emphasis Panels Row (horizontal layout) */
+.emphasis-panels-row {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+}
+
+.emphasis-panels-row .emphasis-panel {
+    flex: 1;
+    margin-bottom: 0;
 }
 
 /* Control Sections */
@@ -473,86 +511,74 @@ body {
     opacity: 0.7;
 }
 
-/* Position Control (X/Y) */
-.position-control {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
+/* Emphasis Panel - Nested Glass Effect */
+.emphasis-panel {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 12px;
+    margin-bottom: 10px;
 }
 
-.position-label {
+.emphasis-panel:last-child {
+    margin-bottom: 0;
+}
+
+.emphasis-main-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.emphasis-main-row .control-label {
+    min-width: 90px;
+}
+
+.emphasis-main-row .slider-container {
+    flex: 1;
+}
+
+/* Position Subsection within Emphasis Panel */
+.position-subsection {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.position-subsection-label {
+    display: block;
     font-size: 9px;
     font-weight: 600;
     color: #FFFFFF;
-    opacity: 0.7;
+    opacity: 0.5;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    margin-bottom: 8px;
 }
 
-.position-input-group {
+.position-slider-row {
     display: flex;
     align-items: center;
-    gap: 4px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 6px;
-    padding: 2px 6px;
+    gap: 10px;
+    margin-bottom: 6px;
 }
 
-.position-value {
-    font-family: 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 11px;
+.position-slider-row:last-child {
+    margin-bottom: 0;
+}
+
+.position-slider-label {
+    font-size: 10px;
     font-weight: 500;
     color: #FFFFFF;
-    width: 32px;
-    text-align: center;
-    background: transparent;
-    border: none;
-    outline: none;
-    -moz-appearance: textfield;
+    opacity: 0.7;
+    min-width: 12px;
 }
 
-.position-value::-webkit-outer-spin-button,
-.position-value::-webkit-inner-spin-button {
-    -webkit-appearance: none;
-    margin: 0;
-}
-
-.position-value:focus {
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 3px;
-}
-
-.position-arrows {
-    display: flex;
-    flex-direction: column;
-    gap: 1px;
-}
-
-.arrow-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 16px;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.15);
-    border: none;
-    border-radius: 3px;
-    color: #FFFFFF;
-    font-size: 8px;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    transition: background 0.15s ease;
-}
-
-.arrow-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.arrow-btn:active {
-    background: rgba(255, 255, 255, 0.4);
+.position-slider-row .slider-container {
+    flex: 1;
 }
 
 /* Color Swatch */

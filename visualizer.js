@@ -10,6 +10,10 @@ class Visualizer {
         this.isRunning = false;
         this.animationId = null;
 
+        // Offscreen canvas for circles (used for grain effect)
+        this.circleCanvas = document.createElement('canvas');
+        this.circleCtx = this.circleCanvas.getContext('2d');
+
         // Drift offsets for organic movement (applied on top of X/Y positions)
         this.driftOffsets = {
             low: { x: 0, y: 0 },
@@ -22,6 +26,14 @@ class Visualizer {
             low: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 },
             mid: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 },
             high: { x: (Math.random() - 0.5) * 100, y: (Math.random() - 0.5) * 100 }
+        };
+
+        // Load grain texture image
+        this.grainImage = new Image();
+        this.grainImage.src = 'assets/grain.jpg';
+        this.grainImageLoaded = false;
+        this.grainImage.onload = () => {
+            this.grainImageLoaded = true;
         };
 
         // Smoothed amplitudes for each emphasis band
@@ -49,14 +61,16 @@ class Visualizer {
             inertia: 0,
             drift: 50,
             // Form
-            fieldScale: 25,
+            fieldScale: 0,
             overlap: 50,
             anchor: 50,
             // Energy
             lowEmphasis: 50,
             midEmphasis: 50,
             highEmphasis: 50,
-            compression: 0
+            compression: 0,
+            // Grain
+            grain: 0
         };
 
         // Control colors (used for rendering frequency emphasis tints)
@@ -158,6 +172,9 @@ class Visualizer {
     resizeCanvas() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
+        // Also resize offscreen circle canvas
+        this.circleCanvas.width = window.innerWidth;
+        this.circleCanvas.height = window.innerHeight;
     }
 
 
@@ -291,6 +308,7 @@ class Visualizer {
 
     /**
      * Draw a radial gradient circle
+     * @param {CanvasRenderingContext2D} ctx - Canvas context to draw on
      * @param {number} x - Center X position
      * @param {number} y - Center Y position
      * @param {number} radius - Circle radius
@@ -298,7 +316,7 @@ class Visualizer {
      * @param {number} opacity - Opacity (0-1)
      * @param {boolean} lightBgMode - Whether to use light background adjustments
      */
-    drawGradientCircle(x, y, radius, color, opacity, lightBgMode = false) {
+    drawGradientCircle(ctx, x, y, radius, color, opacity, lightBgMode = false) {
         let rgb;
 
         if (lightBgMode) {
@@ -311,7 +329,7 @@ class Visualizer {
         }
 
         // Create radial gradient
-        const gradient = this.ctx.createRadialGradient(x, y, 0, x, y, radius);
+        const gradient = ctx.createRadialGradient(x, y, 0, x, y, radius);
 
         if (lightBgMode) {
             // More aggressive gradient for light backgrounds - solid center, slower falloff
@@ -325,10 +343,60 @@ class Visualizer {
             gradient.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0)`);
         }
 
-        this.ctx.fillStyle = gradient;
-        this.ctx.beginPath();
-        this.ctx.arc(x, y, radius, 0, Math.PI * 2);
-        this.ctx.fill();
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    /**
+     * Draw grain texture for a single circle
+     * @param {CanvasRenderingContext2D} ctx - The context to draw grain on
+     * @param {number} x - Circle center X
+     * @param {number} y - Circle center Y
+     * @param {number} radius - Circle radius
+     * @param {string} color - Circle color (hex)
+     * @param {number} intensity - Grain intensity (0-100)
+     * @param {number} amplitude - Current amplitude (0-1) for grain movement
+     */
+    drawCircleGrain(ctx, x, y, radius, color, intensity, amplitude) {
+        if (!this.grainImageLoaded || intensity <= 0) return;
+
+        // Max opacity is 50%
+        const opacity = (intensity / 100) * 0.5;
+        const rgb = this.hexToRgb(color);
+
+        ctx.save();
+
+        // Create circular clipping path matching the circle
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Offset grain based on amplitude (expansion/contraction movement)
+        // Amplitude 0-1 maps to 0-100 pixel offset
+        const grainOffset = amplitude * 100;
+
+        ctx.translate(x, y);
+
+        // Draw grain with soft-light blend to add texture without changing opacity
+        ctx.globalCompositeOperation = 'soft-light';
+        ctx.globalAlpha = opacity;
+
+        // Create pattern with amplitude-based transform for movement
+        const pattern = ctx.createPattern(this.grainImage, 'repeat');
+        pattern.setTransform(new DOMMatrix().translate(grainOffset, grainOffset));
+        ctx.fillStyle = pattern;
+
+        // Fill the entire circle area (grain always fills within circle)
+        ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+
+        // Apply subtle color tint with soft-light (doesn't affect opacity)
+        ctx.globalAlpha = opacity * 0.4;
+        ctx.fillStyle = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+        ctx.fillRect(-radius, -radius, radius * 2, radius * 2);
+
+        ctx.restore();
     }
 
     /**
@@ -545,8 +613,11 @@ class Visualizer {
         // Update drift offsets for organic movement
         this.updateDriftOffsets(deltaTime);
 
-        // Set composite operation for color blending
-        this.ctx.globalCompositeOperation = isLightBg ? 'multiply' : 'screen';
+        // Clear offscreen circle canvas
+        this.circleCtx.clearRect(0, 0, this.circleCanvas.width, this.circleCanvas.height);
+
+        // Set composite operation for color blending on offscreen canvas
+        this.circleCtx.globalCompositeOperation = isLightBg ? 'multiply' : 'screen';
 
         // Calculate field scale modifier (0 = 0.3x, 50 = 1x, 100 = 2x)
         const fieldScaleMultiplier = 0.3 + (this.controlParams.fieldScale / 100) * 1.7;
@@ -570,7 +641,7 @@ class Visualizer {
             { name: 'high', amplitudeKey: 'high', color: this.controlColors.highEmphasis }
         ];
 
-        // Draw circles for each band (left and tethered right through center)
+        // Draw circles for each band to offscreen canvas
         for (const band of bands) {
             const amplitude = finalAmplitudes[band.amplitudeKey] || 0;
             const color = band.color;
@@ -595,14 +666,23 @@ class Visualizer {
             let opacity = effectiveMinOpacity + (effectiveMaxOpacity - effectiveMinOpacity) * expandedAmplitude;
             opacity = Math.min(effectiveMaxOpacity, opacity + baseOpacityBoost);
 
-            // Draw the left circle
-            this.drawGradientCircle(leftX, leftY, radius, color, opacity, isLightBg);
+            // Draw the left circle to offscreen canvas
+            this.drawGradientCircle(this.circleCtx, leftX, leftY, radius, color, opacity, isLightBg);
+            // Apply grain to left circle (movement based on amplitude, not drift)
+            this.drawCircleGrain(this.circleCtx, leftX, leftY, radius, color, this.controlParams.grain, expandedAmplitude);
 
             // Draw the right circle (tethered through center, mirrored Y and drift)
-            this.drawGradientCircle(rightX, rightY, radius, color, opacity, isLightBg);
+            this.drawGradientCircle(this.circleCtx, rightX, rightY, radius, color, opacity, isLightBg);
+            // Apply grain to right circle (movement based on amplitude, not drift)
+            this.drawCircleGrain(this.circleCtx, rightX, rightY, radius, color, this.controlParams.grain, expandedAmplitude);
         }
 
-        // Reset composite operation
+        // Reset composite operation on offscreen canvas
+        this.circleCtx.globalCompositeOperation = 'source-over';
+
+        // Composite circles (with grain) onto main canvas
+        this.ctx.globalCompositeOperation = isLightBg ? 'multiply' : 'screen';
+        this.ctx.drawImage(this.circleCanvas, 0, 0);
         this.ctx.globalCompositeOperation = 'source-over';
     }
 

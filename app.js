@@ -51,6 +51,7 @@ class MusicVisualizerApp {
             fieldScale: { slider: document.getElementById('slider-field-scale'), value: document.getElementById('value-field-scale') },
             overlap: { slider: document.getElementById('slider-overlap'), value: document.getElementById('value-overlap') },
             anchor: { slider: document.getElementById('slider-anchor'), value: document.getElementById('value-anchor') },
+            grain: { slider: document.getElementById('slider-grain'), value: document.getElementById('value-grain') },
             // Energy controls (with color pickers - these tint the circles)
             lowEmphasis: { slider: document.getElementById('slider-low-emphasis'), value: document.getElementById('value-low-emphasis'), color: document.getElementById('color-low-emphasis') },
             midEmphasis: { slider: document.getElementById('slider-mid-emphasis'), value: document.getElementById('value-mid-emphasis'), color: document.getElementById('color-mid-emphasis') },
@@ -65,9 +66,10 @@ class MusicVisualizerApp {
             decay: 0,
             inertia: 0,
             drift: 50,
-            fieldScale: 25,
+            fieldScale: 0,
             overlap: 50,
             anchor: 50,
+            grain: 0,
             lowEmphasis: 50,
             midEmphasis: 50,
             highEmphasis: 50,
@@ -83,12 +85,12 @@ class MusicVisualizerApp {
 
         // Position controls for emphasis circles (X = distance, Y = vertical position)
         this.positionControls = {
-            lowX: { value: document.getElementById('value-low-x'), current: 50 },
-            lowY: { value: document.getElementById('value-low-y'), current: 50 },
-            midX: { value: document.getElementById('value-mid-x'), current: 50 },
-            midY: { value: document.getElementById('value-mid-y'), current: 50 },
-            highX: { value: document.getElementById('value-high-x'), current: 50 },
-            highY: { value: document.getElementById('value-high-y'), current: 50 }
+            lowX: { slider: document.getElementById('slider-low-x'), value: document.getElementById('value-low-x'), current: 50 },
+            lowY: { slider: document.getElementById('slider-low-y'), value: document.getElementById('value-low-y'), current: 50 },
+            midX: { slider: document.getElementById('slider-mid-x'), value: document.getElementById('value-mid-x'), current: 50 },
+            midY: { slider: document.getElementById('slider-mid-y'), value: document.getElementById('value-mid-y'), current: 50 },
+            highX: { slider: document.getElementById('slider-high-x'), value: document.getElementById('value-high-x'), current: 50 },
+            highY: { slider: document.getElementById('slider-high-y'), value: document.getElementById('value-high-y'), current: 50 }
         };
 
         // Initialize
@@ -198,181 +200,26 @@ class MusicVisualizerApp {
             }
         }
 
-        // Position control arrow buttons with hold-to-change
-        this.arrowHoldState = null; // Track current hold state
-        const arrowButtons = document.querySelectorAll('.arrow-btn');
-        arrowButtons.forEach(btn => {
-            btn.addEventListener('mousedown', (e) => this.startArrowHold(e));
-            btn.addEventListener('mouseup', () => this.stopArrowHold());
-            btn.addEventListener('mouseleave', () => this.stopArrowHold());
-            // Touch support
-            btn.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                this.startArrowHold(e);
-            });
-            btn.addEventListener('touchend', () => this.stopArrowHold());
-            btn.addEventListener('touchcancel', () => this.stopArrowHold());
-        });
-
-        // Position value input fields (direct typing)
-        const positionInputs = document.querySelectorAll('.position-value');
-        positionInputs.forEach(input => {
-            input.addEventListener('input', (e) => this.handlePositionInput(e));
-            input.addEventListener('change', (e) => this.handlePositionChange(e));
-            input.addEventListener('blur', (e) => this.handlePositionBlur(e));
-        });
-    }
-
-    /**
-     * Start arrow hold behavior
-     * @param {Event} e - Mouse/touch event
-     */
-    startArrowHold(e) {
-        const btn = e.currentTarget;
-        const target = btn.dataset.target;
-        const direction = btn.dataset.dir;
-        const controlKey = target.replace('-', '').replace('x', 'X').replace('y', 'Y');
-
-        if (!this.positionControls[controlKey]) return;
-
-        // Clear any existing hold
-        this.stopArrowHold();
-
-        // Initialize hold state
-        this.arrowHoldState = {
-            controlKey,
-            direction,
-            startTime: Date.now(),
-            lastTick: Date.now(),
-            intervalId: null
-        };
-
-        // Immediately apply first change
-        this.applyArrowChange(controlKey, direction);
-
-        // Start the hold interval
-        this.arrowHoldState.intervalId = setInterval(() => {
-            this.processArrowHold();
-        }, 50); // Check every 50ms for smooth acceleration
-    }
-
-    /**
-     * Process arrow hold - applies changes with acceleration
-     */
-    processArrowHold() {
-        if (!this.arrowHoldState) return;
-
-        const { controlKey, direction, startTime, lastTick } = this.arrowHoldState;
-        const now = Date.now();
-        const holdDuration = now - startTime;
-
-        // Determine interval based on hold duration
-        // First 2 seconds: slow (every 200ms)
-        // After 2 seconds: fast (every 50ms)
-        const slowInterval = 200;
-        const fastInterval = 50;
-        const accelerationThreshold = 2000; // 2 seconds
-
-        const currentInterval = holdDuration < accelerationThreshold ? slowInterval : fastInterval;
-
-        // Check if enough time has passed since last tick
-        if (now - lastTick >= currentInterval) {
-            this.applyArrowChange(controlKey, direction);
-            this.arrowHoldState.lastTick = now;
-        }
-    }
-
-    /**
-     * Apply a single arrow change
-     * @param {string} controlKey - The control key (e.g., 'lowX')
-     * @param {string} direction - 'up' or 'down'
-     */
-    applyArrowChange(controlKey, direction) {
-        const control = this.positionControls[controlKey];
-        if (!control) return;
-
-        const delta = direction === 'up' ? 1 : -1;
-
-        // Update value with clamping to 0-100
-        control.current = Math.max(0, Math.min(100, control.current + delta));
-
-        // Update display
-        if (control.value) {
-            control.value.value = control.current;
-        }
-
-        // Update visualizer positions in real-time
-        this.updateVisualizerPositions();
-    }
-
-    /**
-     * Stop arrow hold behavior
-     */
-    stopArrowHold() {
-        if (this.arrowHoldState) {
-            if (this.arrowHoldState.intervalId) {
-                clearInterval(this.arrowHoldState.intervalId);
+        // Position control sliders (X/Y for each emphasis)
+        for (const [key, control] of Object.entries(this.positionControls)) {
+            if (!control.slider) {
+                console.warn(`Position slider not found for: ${key}`);
+                continue;
             }
-            this.arrowHoldState = null;
-            // Save state when hold ends
-            this.saveState();
+
+            control.slider.addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                control.current = value;
+                if (control.value) {
+                    control.value.textContent = value;
+                }
+                this.updateVisualizerPositions();
+            });
+
+            control.slider.addEventListener('change', () => {
+                this.saveState();
+            });
         }
-    }
-
-    /**
-     * Handle direct input in position fields
-     * @param {Event} e - Input event
-     */
-    handlePositionInput(e) {
-        const input = e.target;
-        const id = input.id;
-        const controlKey = id.replace('value-', '').replace('-', '').replace('x', 'X').replace('y', 'Y');
-
-        if (!this.positionControls[controlKey]) return;
-
-        let value = parseInt(input.value) || 0;
-        // Clamp to 0-100
-        value = Math.max(0, Math.min(100, value));
-
-        this.positionControls[controlKey].current = value;
-        this.updateVisualizerPositions();
-    }
-
-    /**
-     * Handle change event on position fields (when user finishes editing)
-     * @param {Event} e - Change event
-     */
-    handlePositionChange(e) {
-        const input = e.target;
-        const id = input.id;
-        const controlKey = id.replace('value-', '').replace('-', '').replace('x', 'X').replace('y', 'Y');
-
-        if (!this.positionControls[controlKey]) return;
-
-        let value = parseInt(input.value) || 0;
-        // Clamp to 0-100
-        value = Math.max(0, Math.min(100, value));
-
-        this.positionControls[controlKey].current = value;
-        input.value = value; // Update display with clamped value
-
-        this.updateVisualizerPositions();
-        this.saveState();
-    }
-
-    /**
-     * Handle blur event on position fields
-     * @param {Event} e - Blur event
-     */
-    handlePositionBlur(e) {
-        const input = e.target;
-        const id = input.id;
-        const controlKey = id.replace('value-', '').replace('-', '').replace('x', 'X').replace('y', 'Y');
-
-        if (!this.positionControls[controlKey]) return;
-
-        // Ensure the displayed value matches the clamped current value
-        input.value = this.positionControls[controlKey].current;
     }
 
     /**
@@ -395,9 +242,13 @@ class MusicVisualizerApp {
      */
     resetEmphasisPositions() {
         for (const key of Object.keys(this.positionControls)) {
-            this.positionControls[key].current = 50;
-            if (this.positionControls[key].value) {
-                this.positionControls[key].value.value = 50;
+            const control = this.positionControls[key];
+            control.current = 50;
+            if (control.slider) {
+                control.slider.value = 50;
+            }
+            if (control.value) {
+                control.value.textContent = 50;
             }
         }
         this.updateVisualizerPositions();
@@ -667,10 +518,14 @@ class MusicVisualizerApp {
         // Load emphasis positions if saved
         if (data.emphasisPositions) {
             for (const [key, val] of Object.entries(data.emphasisPositions)) {
-                if (this.positionControls[key]) {
-                    this.positionControls[key].current = val;
-                    if (this.positionControls[key].value) {
-                        this.positionControls[key].value.value = val;
+                const control = this.positionControls[key];
+                if (control) {
+                    control.current = val;
+                    if (control.slider) {
+                        control.slider.value = val;
+                    }
+                    if (control.value) {
+                        control.value.textContent = val;
                     }
                 }
             }
