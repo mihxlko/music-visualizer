@@ -33,10 +33,9 @@ class MusicVisualizerApp {
             volumeIcon: document.getElementById('volume-icon'),
             muteIcon: document.getElementById('mute-icon'),
             colorPickers: {
-                background: document.getElementById('color-background'),
-                backgroundCollapsed: document.getElementById('color-background-collapsed')
+                background: document.getElementById('color-background')
             },
-            mfePanel: document.getElementById('mfe-panel'),
+            mfeSidebar: document.getElementById('mfe-sidebar'),
             mfeCollapseBtn: document.getElementById('mfe-collapse-btn')
         };
 
@@ -65,10 +64,10 @@ class MusicVisualizerApp {
             attack: 0,
             decay: 0,
             inertia: 0,
-            drift: 50,
+            drift: 0,
             fieldScale: 0,
-            overlap: 50,
-            anchor: 50,
+            overlap: 0,
+            anchor: 0,
             grain: 0,
             lowEmphasis: 50,
             midEmphasis: 50,
@@ -150,16 +149,9 @@ class MusicVisualizerApp {
         this.audio.addEventListener('play', () => this.onPlay());
         this.audio.addEventListener('pause', () => this.onPause());
 
-        // Background color pickers (both expanded and collapsed versions)
+        // Background color picker
         this.elements.colorPickers.background.addEventListener('input', (e) => {
             this.setColor('background', e.target.value);
-            // Sync collapsed picker
-            this.elements.colorPickers.backgroundCollapsed.value = e.target.value;
-        });
-        this.elements.colorPickers.backgroundCollapsed.addEventListener('input', (e) => {
-            this.setColor('background', e.target.value);
-            // Sync expanded picker
-            this.elements.colorPickers.background.value = e.target.value;
         });
 
         // MFE Panel collapse toggle
@@ -258,7 +250,7 @@ class MusicVisualizerApp {
      * Toggle MFE panel collapse state
      */
     toggleMfeCollapse() {
-        this.elements.mfePanel.classList.toggle('collapsed');
+        this.elements.mfeSidebar.classList.toggle('collapsed');
     }
 
     /**
@@ -344,7 +336,6 @@ class MusicVisualizerApp {
         // Generate background color
         const backgroundColor = this.hslToHex((baseHue + 180) % 360, 30, 15);
         this.elements.colorPickers.background.value = backgroundColor;
-        this.elements.colorPickers.backgroundCollapsed.value = backgroundColor;
         this.visualizer.setColor('background', backgroundColor);
 
         // Generate harmonious colors for frequency emphasis controls (these tint the circles)
@@ -488,7 +479,6 @@ class MusicVisualizerApp {
         // Load background color
         if (data.baseBackground) {
             this.elements.colorPickers.background.value = data.baseBackground;
-            this.elements.colorPickers.backgroundCollapsed.value = data.baseBackground;
             this.visualizer.setColor('background', data.baseBackground);
         }
 
@@ -662,9 +652,6 @@ class MusicVisualizerApp {
     loadState() {
         try {
             const data = JSON.parse(localStorage.getItem('musicVisualizerData') || '{}');
-
-            // Sync collapsed background picker with expanded one
-            this.elements.colorPickers.backgroundCollapsed.value = this.elements.colorPickers.background.value;
 
             // Apply background color to visualizer
             this.visualizer.setColor('background', this.elements.colorPickers.background.value);

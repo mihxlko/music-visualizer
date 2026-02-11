@@ -59,11 +59,11 @@ class Visualizer {
             attack: 0,
             decay: 0,
             inertia: 0,
-            drift: 50,
+            drift: 0,
             // Form
             fieldScale: 0,
-            overlap: 50,
-            anchor: 50,
+            overlap: 0,
+            anchor: 0,
             // Energy
             lowEmphasis: 50,
             midEmphasis: 50,
@@ -649,12 +649,10 @@ class Visualizer {
             // Calculate base positions from X/Y parameters
             const positions = this.calculateCirclePositions(band.name);
 
-            // Apply drift offsets for organic movement
-            const driftOffset = this.driftOffsets[band.name];
-            const leftX = positions.left.x + driftOffset.x;
-            const leftY = positions.left.y + driftOffset.y;
-            const rightX = positions.right.x - driftOffset.x; // Mirror drift for right circle
-            const rightY = positions.right.y - driftOffset.y;
+            const leftX = positions.left.x;
+            const leftY = positions.left.y;
+            const rightX = positions.right.x;
+            const rightY = positions.right.y;
 
             // Apply power curve for more dramatic expansion/contraction
             const expandedAmplitude = Math.pow(amplitude, 0.6);
